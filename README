@@ -1,0 +1,44 @@
+                        Mangadex tools
+                        ==============
+
+        Overview
+        --------
+
+Some useful tools to interface with Mangadex via its JSON API. I foresee two
+tools for now:
+
+* mangadex_dl.tcl
+    Downloads chapters with varied options
+
++---------------------------------------------------------+
+| Usage: mangadex_dl.tcl [OPTIONS] SERIE_URL [CHAPTER...] |
+|                                                         |
+| OPTIONS                                                 |
+|     -help                                               |
+|         Print this help message and exit.               |
+|                                                         |
+|     -proxy PROXY_URL                                    |
+|         Set the curl HTTP/HTTPS proxy.                  |
+|                                                         |
+|     -first-page PAGE_NO                                 |
+|         Start downloading from PAGE_NO (see lrange(n)). |
+|                                                         |
+|     -last-page PAGE_NO                                  |
+|         Stop downloading at PAGE_NO.                    |
+|                                                         |
+|     -lang LANG_CODE                                     |
+|         Only download chapters in this language.        |
+|                                                         |
++---------------------------------------------------------+
+
+* mangadex_monitor.tcl (WIP)
+    Maintain ATOM feeds for series and automatically download new chapters.
+
+
+        Dependencies
+        ------------
+
+* Tcl 8.6
+* tcllib (json module)
+* curl
+* tdom (mangadex_monitor.tcl only)
