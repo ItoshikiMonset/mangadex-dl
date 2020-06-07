@@ -8,7 +8,7 @@ Some useful tools to interface with Mangadex via its JSON API. I foresee two
 tools for now:
 
 * mangadex_dl.tcl
-    Downloads chapters with varied options
+    Downloads chapters with varied options.
 
 +---------------------------------------------------------+
 | Usage: mangadex_dl.tcl [OPTIONS] SERIE_URL [CHAPTER...] |
