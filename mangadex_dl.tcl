@@ -1,7 +1,12 @@
 #!/usr/bin/env tclsh
 # TODO: group preference, override serie name ?
 package require json
-source [file join [file dirname [info script]] util.tcl]
+
+proc scriptdir {} {
+	file dirname [file dirname [file normalize [file join [info script] dummy]]]
+}
+source [file join [scriptdir] util.tcl]
+
 
 proc json_dl {url} {
 	json::json2dict [exec curl -sL $url]
