@@ -22,18 +22,24 @@ autocli usage opts \
 	"\[OPTIONS\] CATALOG" \
 	{
 		"Read series to monitor from a catalog using the following syntax:"
-		"    {serie_url ?\"autodl\" 1? ?\"group_filter\" group_name?}..."
+		"    {serie_url ?option value? ...} ..."
+		""
+		"with the following options available:"
+		"    autodl"
+		"        If value is 1, new chapters for this serie are downloaded to "
+		"        the directory specified via the -autodl-dir option."
+		""
+		"    group_filter"
+		"        Only download chapters having the value matching one of their"
+		"        group names."
+		""
+		"    alt_title"
+		"        Use this title instead of the Mangadex provided one."
 		""
 		"For each serie, an ATOM feed is created next to the given CATALOG"
-		"file and is updated for each new chapter."
-		"A database holding the last timestamp for the catalog is also"
+		"file and updated for each new chapter."
+		"A database holding the last timestamp for each catalog entry is also"
 		"created at the same place."
-		""
-		"If autodl is set, new chapters for this serie are downloaded to the"
-		"directory specified via the -autodl-dir option."
-		"If group_filter is set to GROUP, only chapters having it as one of"
-		"their group are downloaded. Even if chapers isn't downloaded because"
-		"of group_filter, the feed is still updated."
 	} \
 	{
 		proxy      {param ""   PROXY_URL "Set the curl HTTP/HTTPS proxy."}
@@ -81,7 +87,7 @@ foreach entry $catalog {
 	}
 
 	# Download serie JSON
-	set serie_url [lindex $entry 0]
+	set entry [lassign $entry serie_url]
 	if {![regexp {https://mangadex\.org/title/(\d+)/[^/]+} $serie_url -> serie_id]} {
 		puts stderr "$serie_url: invalid mangadex URL"
 		continue
@@ -89,8 +95,17 @@ foreach entry $catalog {
 	puts "Downloading serie JSON ($serie_url)..."
 	set root [json_dl https://mangadex.org/api/manga/$serie_id]
 
-	# Read feed or create it if it doesn't exist
+	# Parse the entry extra options
+	set autodl 0
+	set group_filter ""
 	set serie_title [dict get $root manga title]
+	if {[llength $entry] != 0} {
+		dict get? $entry autodl autodl
+		dict get? $entry group_filter group_filter
+		dict get? $entry serie_title alt_title
+	}
+
+	# Read feed or create it if it doesn't exist
 	set feed_path [file join $datadir_path \
 				   [path_sanitize ${serie_title}_${serie_id}].xml]
 	if {![file exists $feed_path]} {
@@ -125,14 +140,6 @@ foreach entry $catalog {
 	set chapters [dict filter $chapters script {key val} \
 					  {expr {[dict get $val timestamp] > $local_tstamp}}]
 
-	# Handle extra entry arguments
-	set autodl 0
-	set group_filter ""
-	if {[llength $entry] > 1} {
-		set extra_args [lrange $entry 1 end]
-		dict get? $extra_args autodl autodl
-		dict get? $extra_args group_filter group_filter
-	}
 
 	# Loop over every new chapter, append to feed and download if autodl is set
 	# and group_filter matches at least one group
