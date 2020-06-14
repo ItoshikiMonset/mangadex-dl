@@ -53,7 +53,7 @@ if {$lang ne ""} {
 }
 if {$argc >= 1} {
 	set chapters [dict filter $chapters script {key val} \
-					  {expr {[dict get $val chapter] in $argv}}]
+					  {in [dict get $val chapter] $argv}]
 }
 
 # Iterate over the filtered chapters and download

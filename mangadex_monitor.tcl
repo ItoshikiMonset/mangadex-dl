@@ -11,7 +11,7 @@ if {![executable_check curl]} {
 
 
 proc tstamp_sort {c1 c2} {
-	expr [dict get $c1 timestamp] - [dict get $c2 timestamp]
+	- [dict get $c1 timestamp] [dict get $c2 timestamp]
 }
 
 
@@ -138,7 +138,7 @@ foreach entry $catalog {
 		continue
 	}
 	set chapters [dict filter $chapters script {key val} \
-					  {expr {[dict get $val timestamp] > $local_tstamp}}]
+					  {> [dict get $val timestamp] $local_tstamp}]
 
 
 	# Loop over every new chapter, append to feed and download if autodl is set
