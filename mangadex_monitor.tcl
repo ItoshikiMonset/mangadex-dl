@@ -88,6 +88,18 @@ foreach entry $catalog {
 	}
 	puts "Downloading serie JSON ($serie_url)..."
 	set root [json_dl https://mangadex.org/api/manga/$serie_id]
+
+	# Read feed or create it if it doesn't exist
+	set serie_title [dict get $root manga title]
+	set feed_path [file join $datadir_path \
+				   [path_sanitize ${serie_title}_${serie_id}].xml]
+	if {![file exists $feed_path]} {
+		set feed [atom create $feed_path "$serie_title - new Mangadex chapters"]
+		atom write $feed
+	} else {
+		set feed [atom read $feed_path]
+	}
+
 	set chapters [dict get $root chapter]
 	# Filter chapters by language
 	if {$lang ne ""} {
@@ -120,17 +132,6 @@ foreach entry $catalog {
 		set extra_args [lrange $entry 1 end]
 		dict get? $extra_args autodl autodl
 		dict get? $extra_args group_filter group_filter
-	}
-
-	# Read feed or create it if it doesn't exist
-	set serie_title [dict get $root manga title]
-	set feed_path [file join $datadir_path \
-				   [path_sanitize ${serie_title}_${serie_id}].xml]
-	set feed_title "$serie_title - new Mangadex chapters"
-	if {![file exists $feed_path]} {
-		set feed [atom create $feed_path $feed_title]
-	} else {
-		set feed [atom read $feed_path]
 	}
 
 	# Loop over every new chapter, append to feed and download if autodl is set
