@@ -27,12 +27,15 @@ Some useful tools to interface with Mangadex via its JSON API:
 |                                                                         |
 |     -first-page PAGE_NO                                                 |
 |         Start downloading from PAGE_NO (see lrange(n)).                 |
+|         Defaults to "0".                                                |
 |                                                                         |
 |     -last-page PAGE_NO                                                  |
 |         Stop downloading at PAGE_NO.                                    |
+|         Defaults to "end".                                              |
 |                                                                         |
 |     -lang LANG_CODE                                                     |
 |         Only download chapters in this language.                        |
+|         Defaults to "gb".                                               |
 |                                                                         |
 +-------------------------------------------------------------------------+
 
@@ -74,11 +77,35 @@ Some useful tools to interface with Mangadex via its JSON API:
 |                                                                           |
 |     -lang LANG_CODE                                                       |
 |         Only monitor chapters in this language.                           |
+|         Defaults to "gb".                                                 |
 |                                                                           |
 |     -autodl-dir DIRECTORY                                                 |
 |         Where to auto download new chapters.                              |
+|         Defaults to ".".                                                  |
 |                                                                           |
 +---------------------------------------------------------------------------+
+
+
+        Examples
+        --------
+
+Download all the english chapters of Grappler Baki:
+    $ mangadex_dl.tcl https://mangadex.org/title/2434/grappler-baki
+
+The same but only the chapter 11 and 12 using a proxy:
+    $ mangadex_dl.tcl -proxy socks5h://localhost:9050 https://mangadex.org/title/2434/grappler-baki 11 12
+
+Monitoring example:
+    $ cat catalog
+    {https://mangadex.org/title/2434/grappler-baki autodl 1 alt_title "Baki the Grappler" group_filter "TheSpinyBackTeam"}
+    {https://mangadex.org/title/30907/baki-dou-2018 autodl 1}
+    $ mangadex_monitor.tcl -autodl-dir ~/Mangos/autodl catalog
+    ...
+    $ ls
+    Baki Dou (2018)_30907.xml
+    catalog
+    Grappler Baki_2434.xml
+    timestamp.db
 
 
         Dependencies

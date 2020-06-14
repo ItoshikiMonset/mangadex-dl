@@ -105,7 +105,8 @@ proc autocli {_help _optres name short_descr synopsis {long_descr ""} optspec} {
 			if {$vallen < 2} {
 				error "$val: invalid optspec value for key $key; missing default value"
 			}
-			dict set result $key [lindex $val 1]
+			set default [lindex $val 1]
+			dict set result $key $default
 			append help "\n    -$key"
 			if {$vallen == 4} {
 				append help " [lindex $val 2]"
@@ -113,6 +114,9 @@ proc autocli {_help _optres name short_descr synopsis {long_descr ""} optspec} {
 			append help \n
 			if {$vallen == 3 || $vallen == 4} {
 				append help "        [lindex $val end]\n"
+			}
+			if {$default ne ""} {
+				append help "        Defaults to \"$default\".\n"
 			}
 		} else {
 			error "$val: invalid optspec value for key $key; invalid opt type"
