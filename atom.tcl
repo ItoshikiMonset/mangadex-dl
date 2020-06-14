@@ -1,4 +1,4 @@
-# Simple ATOM reading/writing, exported functions:
+# Simple Atom reading/writing, exported functions:
 #     create, read, add_entry, write
 package require tdom
 

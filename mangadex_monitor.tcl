@@ -36,7 +36,7 @@ autocli usage opts \
 		"    alt_title"
 		"        Use this title instead of the Mangadex provided one."
 		""
-		"For each serie, an ATOM feed is created next to the given CATALOG"
+		"For each serie, an Atom feed is created next to the given CATALOG"
 		"file and updated for each new chapter."
 		"A database holding the last timestamp for each catalog entry is also"
 		"created at the same place."
