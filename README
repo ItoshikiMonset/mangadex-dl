@@ -48,7 +48,8 @@ Some useful tools to interface with Mangadex via its JSON API:
 |     mangadex_monitor.tcl [OPTIONS] CATALOG                                |
 |                                                                           |
 | DESCRIPTION                                                               |
-|     Read series to monitor from a catalog using the following syntax:     |
+|     Read series to monitor from CATALOG, a file containing a Tcl list     |
+|     using the following syntax:                                           |
 |         {serie_url ?option value? ...} ...                                |
 |                                                                           |
 |     with the following options available:                                 |
@@ -96,16 +97,18 @@ The same but only the chapters 11 and 12, using a proxy:
     $ mangadex_dl.tcl -proxy socks5h://localhost:9050 https://mangadex.org/title/2434/grappler-baki 11 12
 
 Monitoring example:
-    $ cat catalog
+    $ ls
+    catalog.tcllist
+    $ cat catalog.tcllist
     {https://mangadex.org/title/2434/grappler-baki autodl 1 alt_title "Baki the Grappler" group_filter "TheSpinyBackTeam"}
     {https://mangadex.org/title/30907/baki-dou-2018 autodl 1}
-    $ mangadex_monitor.tcl -autodl-dir ~/Mangos/autodl catalog
+    $ mangadex_monitor.tcl -autodl-dir ~/Mangos/autodl catalog.tcllist
     ...
     $ ls
     Baki Dou (2018)_30907.xml
     Baki the Grappler_2434.xml
-    catalog
-    timestamp.db
+    catalog.tcllist
+    timestamps.tcldict
 
 
         Dependencies

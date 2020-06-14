@@ -21,7 +21,8 @@ autocli usage opts \
 	"monitor Mangadex series" \
 	"\[OPTIONS\] CATALOG" \
 	{
-		"Read series to monitor from a catalog using the following syntax:"
+		"Read series to monitor from CATALOG, a file containing a Tcl list"
+		"using the following syntax:"
 		"    {serie_url ?option value? ...} ..."
 		""
 		"with the following options available:"
@@ -67,7 +68,7 @@ if {![string is list $catalog]} {
 
 set datadir_path [file normalize [file dirname $catalog_path]]
 
-set tstampdb_path [file join $datadir_path timestamp.db]
+set tstampdb_path [file join $datadir_path timestamps.tcldict]
 if {[file exists $tstampdb_path]} {
 	set tstampdb [read_file $tstampdb_path]
 	if {![string is list $tstampdb] || [llength $tstampdb] % 2} {
