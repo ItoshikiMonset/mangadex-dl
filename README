@@ -92,7 +92,7 @@ Some useful tools to interface with Mangadex via its JSON API:
 Download all the english chapters of Grappler Baki:
     $ mangadex_dl.tcl https://mangadex.org/title/2434/grappler-baki
 
-The same but only the chapter 11 and 12 using a proxy:
+The same but only the chapters 11 and 12, using a proxy:
     $ mangadex_dl.tcl -proxy socks5h://localhost:9050 https://mangadex.org/title/2434/grappler-baki 11 12
 
 Monitoring example:
