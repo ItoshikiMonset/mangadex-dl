@@ -37,42 +37,48 @@ Some useful tools to interface with Mangadex via its JSON API:
 +-------------------------------------------------------------------------+
 
 * mangadex_monitor.tcl
-+--------------------------------------------------------------------------+
-| NAME                                                                     |
-|     mangadex_monitor.tcl - monitor Mangadex series                       |
-|                                                                          |
-| SYNOPSIS                                                                 |
-|     mangadex_monitor.tcl [OPTIONS] CATALOG                               |
-|                                                                          |
-| DESCRIPTION                                                              |
-|     Read series to monitor from a catalog using the following syntax:    |
-|         {serie_url ?"autodl" 1? ?"group_filter" group_name?}...          |
-|                                                                          |
-|     For each serie, an ATOM feed is created next to the given CATALOG    |
-|     file and is updated for each new chapter.                            |
-|     A database holding the last timestamp for the catalog is also        |
-|     created at the same place.                                           |
-|                                                                          |
-|     If autodl is set, new chapters for this serie are downloaded to the  |
-|     directory specified via the -autodl-dir option.                      |
-|     If group_filter is set to GROUP, only chapters having it as one of   |
-|     their group are downloaded. Even if chapers isn't downloaded because |
-|     of group_filter, the feed is still updated.                          |
-|                                                                          |
-| OPTIONS                                                                  |
-|     -help                                                                |
-|         Print this help message and exit.                                |
-|                                                                          |
-|     -proxy PROXY_URL                                                     |
-|         Set the curl HTTP/HTTPS proxy.                                   |
-|                                                                          |
-|     -lang LANG_CODE                                                      |
-|         Only monitor chapters in this language.                          |
-|                                                                          |
-|     -autodl-dir DIRECTORY                                                |
-|         Where to auto download new chapters.                             |
-|                                                                          |
-+--------------------------------------------------------------------------+
++---------------------------------------------------------------------------+
+| NAME                                                                      |
+|     mangadex_monitor.tcl - monitor Mangadex series                        |
+|                                                                           |
+| SYNOPSIS                                                                  |
+|     mangadex_monitor.tcl [OPTIONS] CATALOG                                |
+|                                                                           |
+| DESCRIPTION                                                               |
+|     Read series to monitor from a catalog using the following syntax:     |
+|         {serie_url ?option value? ...} ...                                |
+|                                                                           |
+|     with the following options available:                                 |
+|         autodl                                                            |
+|             If value is 1, new chapters for this serie are downloaded to  |
+|             the directory specified via the -autodl-dir option.           |
+|                                                                           |
+|         group_filter                                                      |
+|             Only download chapters having the value matching one of their |
+|             group names.                                                  |
+|                                                                           |
+|         alt_title                                                         |
+|             Use this title instead of the Mangadex provided one.          |
+|                                                                           |
+|     For each serie, an ATOM feed is created next to the given CATALOG     |
+|     file and updated for each new chapter.                                |
+|     A database holding the last timestamp for each catalog entry is also  |
+|     created at the same place.                                            |
+|                                                                           |
+| OPTIONS                                                                   |
+|     -help                                                                 |
+|         Print this help message and exit.                                 |
+|                                                                           |
+|     -proxy PROXY_URL                                                      |
+|         Set the curl HTTP/HTTPS proxy.                                    |
+|                                                                           |
+|     -lang LANG_CODE                                                       |
+|         Only monitor chapters in this language.                           |
+|                                                                           |
+|     -autodl-dir DIRECTORY                                                 |
+|         Where to auto download new chapters.                              |
+|                                                                           |
++---------------------------------------------------------------------------+
 
 
         Dependencies
