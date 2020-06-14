@@ -4,35 +4,75 @@
         Overview
         --------
 
-Some useful tools to interface with Mangadex via its JSON API. I foresee two
-tools for now:
+Some useful tools to interface with Mangadex via its JSON API:
 
 * mangadex_dl.tcl
-    Downloads chapters with varied options.
++-------------------------------------------------------------------------+
+| NAME                                                                    |
+|     mangadex_dl.tcl - download Mangadex chapters                        |
+|                                                                         |
+| SYNOPSIS                                                                |
+|     mangadex_dl.tcl [OPTIONS] SERIE_URL [CHAPTER...]                    |
+|                                                                         |
+| DESCRIPTION                                                             |
+|     Download each of the specified chapters into its own properly named |
+|     directory. If no chapter is specified, download all of them.        |
+|                                                                         |
+| OPTIONS                                                                 |
+|     -help                                                               |
+|         Print this help message and exit.                               |
+|                                                                         |
+|     -proxy PROXY_URL                                                    |
+|         Set the curl HTTP/HTTPS proxy.                                  |
+|                                                                         |
+|     -first-page PAGE_NO                                                 |
+|         Start downloading from PAGE_NO (see lrange(n)).                 |
+|                                                                         |
+|     -last-page PAGE_NO                                                  |
+|         Stop downloading at PAGE_NO.                                    |
+|                                                                         |
+|     -lang LANG_CODE                                                     |
+|         Only download chapters in this language.                        |
+|                                                                         |
++-------------------------------------------------------------------------+
 
-+---------------------------------------------------------+
-| Usage: mangadex_dl.tcl [OPTIONS] SERIE_URL [CHAPTER...] |
-|                                                         |
-| OPTIONS                                                 |
-|     -help                                               |
-|         Print this help message and exit.               |
-|                                                         |
-|     -proxy PROXY_URL                                    |
-|         Set the curl HTTP/HTTPS proxy.                  |
-|                                                         |
-|     -first-page PAGE_NO                                 |
-|         Start downloading from PAGE_NO (see lrange(n)). |
-|                                                         |
-|     -last-page PAGE_NO                                  |
-|         Stop downloading at PAGE_NO.                    |
-|                                                         |
-|     -lang LANG_CODE                                     |
-|         Only download chapters in this language.        |
-|                                                         |
-+---------------------------------------------------------+
-
-* mangadex_monitor.tcl (WIP)
-    Maintain ATOM feeds for series and automatically download new chapters.
+* mangadex_monitor.tcl
++--------------------------------------------------------------------------+
+| NAME                                                                     |
+|     mangadex_monitor.tcl - monitor Mangadex series                       |
+|                                                                          |
+| SYNOPSIS                                                                 |
+|     mangadex_monitor.tcl [OPTIONS] CATALOG                               |
+|                                                                          |
+| DESCRIPTION                                                              |
+|     Read series to monitor from a catalog using the following syntax:    |
+|         {serie_url ?"autodl" 1? ?"group_filter" group_name?}...          |
+|                                                                          |
+|     For each serie, an ATOM feed is created next to the given CATALOG    |
+|     file and is updated for each new chapter.                            |
+|     A database holding the last timestamp for the catalog is also        |
+|     created at the same place.                                           |
+|                                                                          |
+|     If autodl is set, new chapters for this serie are downloaded to the  |
+|     directory specified via the -autodl-dir option.                      |
+|     If group_filter is set to GROUP, only chapters having it as one of   |
+|     their group are downloaded. Even if chapers isn't downloaded because |
+|     of group_filter, the feed is still updated.                          |
+|                                                                          |
+| OPTIONS                                                                  |
+|     -help                                                                |
+|         Print this help message and exit.                                |
+|                                                                          |
+|     -proxy PROXY_URL                                                     |
+|         Set the curl HTTP/HTTPS proxy.                                   |
+|                                                                          |
+|     -lang LANG_CODE                                                      |
+|         Only monitor chapters in this language.                          |
+|                                                                          |
+|     -autodl-dir DIRECTORY                                                |
+|         Where to auto download new chapters.                             |
+|                                                                          |
++--------------------------------------------------------------------------+
 
 
         Dependencies
