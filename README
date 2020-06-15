@@ -57,11 +57,11 @@ Some useful tools to interface with Mangadex via its JSON API:
 |             If value is 1, new chapters for this serie are downloaded to  |
 |             the directory specified via the -autodl-dir option.           |
 |                                                                           |
-|         group_filter                                                      |
+|         group                                                             |
 |             Only download chapters having the value matching one of their |
 |             group names.                                                  |
 |                                                                           |
-|         alt_title                                                         |
+|         title                                                             |
 |             Use this title instead of the Mangadex provided one.          |
 |                                                                           |
 |     For each serie, an Atom feed is created next to the given CATALOG     |
@@ -84,6 +84,9 @@ Some useful tools to interface with Mangadex via its JSON API:
 |         Where to auto download new chapters.                              |
 |         Defaults to ".".                                                  |
 |                                                                           |
+|     -single-feed                                                          |
+|         Use a single feed instead of one per serie.                       |
+|                                                                           |
 +---------------------------------------------------------------------------+
 
 
@@ -93,14 +96,14 @@ Some useful tools to interface with Mangadex via its JSON API:
 Download all the english chapters of Grappler Baki:
     $ mangadex_dl.tcl https://mangadex.org/title/2434/grappler-baki
 
-The same but only the chapters 11 and 12, using a proxy:
+Idem but only the chapters 11 and 12, using a proxy:
     $ mangadex_dl.tcl -proxy socks5h://localhost:9050 https://mangadex.org/title/2434/grappler-baki 11 12
 
 Monitoring example:
     $ ls
     catalog.tcllist
     $ cat catalog.tcllist
-    {https://mangadex.org/title/2434/grappler-baki autodl 1 alt_title "Baki the Grappler" group_filter "TheSpinyBackTeam"}
+    {https://mangadex.org/title/2434/grappler-baki autodl 1 title "Baki the Grappler" group "TheSpinyBackTeam"}
     {https://mangadex.org/title/30907/baki-dou-2018 autodl 1}
     $ mangadex_monitor.tcl -autodl-dir ~/Mangos/autodl catalog.tcllist
     ...
@@ -108,6 +111,14 @@ Monitoring example:
     Baki Dou (2018)_30907.xml
     Baki the Grappler_2434.xml
     catalog.tcllist
+    timestamps.tcldict
+
+Idem using a single feed:
+    $ mangadex_monitor.tcl -single-feed -autodl-dir ~/Mangos/autodl catalog.tcllist
+    ...
+    $ ls
+    catalog.tcllist
+    mangadex.xml
     timestamps.tcldict
 
 

@@ -14,6 +14,16 @@ proc tstamp_sort {c1 c2} {
 	- [dict get $c1 timestamp] [dict get $c2 timestamp]
 }
 
+proc open_or_create_feed {path title} {
+	if {![file exists $path]} {
+		set feed [atom create $path $title]
+		atom write $feed
+	} else {
+		set feed [atom read $path]
+	}
+	return $feed
+}
+
 
 # Option and argument handling
 autocli usage opts \
@@ -30,11 +40,11 @@ autocli usage opts \
 		"        If value is 1, new chapters for this serie are downloaded to "
 		"        the directory specified via the -autodl-dir option."
 		""
-		"    group_filter"
+		"    group"
 		"        Only download chapters having the value matching one of their"
 		"        group names."
 		""
-		"    alt_title"
+		"    title"
 		"        Use this title instead of the Mangadex provided one."
 		""
 		"For each serie, an Atom feed is created next to the given CATALOG"
@@ -43,9 +53,10 @@ autocli usage opts \
 		"created at the same place."
 	} \
 	{
-		proxy      {param ""   PROXY_URL "Set the curl HTTP/HTTPS proxy."}
-		lang       {param "gb" LANG_CODE "Only monitor chapters in this language."}
-		autodl-dir {param "."  DIRECTORY "Where to auto download new chapters."}
+		proxy       {param ""   PROXY_URL "Set the curl HTTP/HTTPS proxy."}
+		lang        {param "gb" LANG_CODE "Only monitor chapters in this language."}
+		autodl-dir  {param "."  DIRECTORY "Where to auto download new chapters."}
+		single-feed {flag                 "Use a single feed instead of one per serie."}
 	}
 dictassign $opts
 
@@ -78,8 +89,12 @@ if {[file exists $tstampdb_path]} {
 	set tstampdb {}
 }
 
-# Loop over the catalog entries of the form:
-#   url ?"autodl" 1? ?"group_filter" group?
+if {$single_feed} {
+	set feed_path [file join $datadir_path mangadex.xml]
+	set feed [open_or_create_feed $feed_path "new Mangadex chapters"]
+}
+
+# Loop over the catalog entries
 set orig_pwd [pwd]
 foreach entry $catalog {
 	if {![string is list $entry] || [llength $entry] == 0} {
@@ -98,22 +113,20 @@ foreach entry $catalog {
 
 	# Parse the entry extra options
 	set autodl 0
-	set group_filter ""
+	set group ""
 	set serie_title [dict get $root manga title]
 	if {[llength $entry] != 0} {
 		dict get? $entry autodl autodl
-		dict get? $entry group_filter group_filter
-		dict get? $entry serie_title alt_title
+		dict get? $entry group group
+		dict get? $entry serie_title title
 	}
 
-	# Read feed or create it if it doesn't exist
-	set feed_path [file join $datadir_path \
-				   [path_sanitize ${serie_title}_${serie_id}].xml]
-	if {![file exists $feed_path]} {
-		set feed [atom create $feed_path "$serie_title - new Mangadex chapters"]
-		atom write $feed
-	} else {
-		set feed [atom read $feed_path]
+	# Read feed or create per serie feed
+	if {!$single_feed} {
+		set feed_path [file join $datadir_path \
+						   [path_sanitize ${serie_title}_${serie_id}].xml]
+		set feed [open_or_create_feed $feed_path \
+					  "$serie_title - new Mangadex chapters"]
 	}
 
 	set chapters [dict get $root chapter]
@@ -129,7 +142,7 @@ foreach entry $catalog {
 		continue
 	}
 
-	# Compare local and remote timestamp and filter chapters to only keep
+	# Compare local with remote timestamp and filter chapters to only keep
 	# the new ones; if new chapters there are
 	set no_local_tstamp [catch {dict get $tstampdb $serie_id} local_tstamp]
 	set remote_tstamp [dict get [lindex $chapters end] timestamp]
@@ -141,15 +154,14 @@ foreach entry $catalog {
 	set chapters [dict filter $chapters script {key val} \
 					  {> [dict get $val timestamp] $local_tstamp}]
 
-
 	# Loop over every new chapter, append to feed and download if autodl is set
-	# and group_filter matches at least one group
+	# and group matches at least one group_name
 	foreach {chapter_id chapter_data} $chapters {
 		set chapter_name [chapter_format_name $serie_title $chapter_data]
-		if {$autodl && ($group_filter eq "" || \
-						[dict get $chapter_data group_name] eq $group_filter   ||
-						[dict get $chapter_data group_name_2] eq $group_filter ||
-						[dict get $chapter_data group_name_3] eq $group_filter)} {
+		if {$autodl && ($group eq "" || \
+						[dict get $chapter_data group_name]   eq $group ||
+						[dict get $chapter_data group_name_2] eq $group ||
+						[dict get $chapter_data group_name_3] eq $group)} {
 			set outdir [file join $autodl_dir [path_sanitize $chapter_name]]
 			file mkdir $outdir
 			cd $outdir
@@ -161,6 +173,11 @@ foreach entry $catalog {
 			atom add_entry feed "$chapter_name"
 		}
 	}
+	if {!$single_feed} {
+		atom write $feed
+	}
+}
+if {$single_feed} {
 	atom write $feed
 }
 write_file $tstampdb_path $tstampdb
