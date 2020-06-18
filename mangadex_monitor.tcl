@@ -38,7 +38,8 @@ autocli usage opts \
 		"with the following options available:"
 		"    autodl"
 		"        If value is 1, new chapters for this serie are downloaded to "
-		"        the directory specified via the -autodl-dir option."
+		"        the directory specified via the -autodl-dir option. If the"
+		"        -autodl option is set, using a value of 0 disables it."
 		""
 		"    group"
 		"        Only download chapters having the value matching one of their"
@@ -55,6 +56,7 @@ autocli usage opts \
 	{
 		proxy       {param ""   PROXY_URL "Set the curl HTTP/HTTPS proxy."}
 		lang        {param "gb" LANG_CODE "Only monitor chapters in this language."}
+		autodl      {flag                 "Automatically download new chapters."}
 		autodl-dir  {param "."  DIRECTORY "Where to auto download new chapters."}
 		single-feed {flag                 "Use a single feed instead of one per serie."}
 	}
@@ -69,6 +71,8 @@ if {$proxy ne ""} {
 	set ::env(http_proxy)  $proxy
 	set ::env(https_proxy) $proxy
 }
+set autodl_default $autodl
+unset autodl
 
 
 # Various path setting and init file reading
@@ -104,7 +108,7 @@ foreach entry $catalog {
 
 	# Download serie JSON
 	set entry [lassign $entry serie_url]
-	if {![regexp {https://mangadex\.org/title/(\d+)/[^/]+} $serie_url -> serie_id]} {
+	if {![regexp {https://(?:www\.)?mangadex\.org/title/(\d+)/[^/]+} $serie_url -> serie_id]} {
 		puts stderr "$serie_url: invalid mangadex URL"
 		continue
 	}
@@ -112,7 +116,7 @@ foreach entry $catalog {
 	set root [json_dl https://mangadex.org/api/manga/$serie_id]
 
 	# Parse the entry extra options
-	set autodl 0
+	set autodl $autodl_default
 	set group ""
 	set serie_title [dict get $root manga title]
 	if {[llength $entry] != 0} {

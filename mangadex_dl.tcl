@@ -39,7 +39,7 @@ if {$proxy ne ""} {
 
 
 # Download serie JSON
-if {![regexp {https://mangadex\.org/title/(\d+)/[^/]+} $serie_url -> serie_id]} {
+if {![regexp {https://(?:www\.)?mangadex\.org/title/(\d+)/[^/]+} $serie_url -> serie_id]} {
 	die "$serie_url: invalid mangadex URL"
 }
 puts "Downloading serie JSON..."
