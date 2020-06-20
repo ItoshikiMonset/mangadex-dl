@@ -6,7 +6,7 @@ source [file join $scriptdir util.tcl]
 
 # Produce a daiz approved name for a chapter
 proc chapter_format_name {serie_name chapter_info} {
-	dictassign $chapter_info
+	dict assign $chapter_info
 	set ret "$serie_name - c"
 
 	if {[string is entier $chapter]} {
@@ -38,7 +38,7 @@ proc json_dl {url} {
 # $last in the CWD
 proc chapter_dl {chapter_id {first 0} {last end}} {
 	set json [json_dl https://mangadex.org/api/chapter/$chapter_id]
-	dictassign $json
+	dict assign $json
 
 	set urls [lmap x [lrange $page_array $first $last] \
 				  {string cat $server$hash/ $x}]

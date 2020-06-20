@@ -25,7 +25,7 @@ autocli usage opts \
 		last-page  {param end  PAGE_NO   "Stop downloading at PAGE_NO."}
 		lang       {param "gb" LANG_CODE "Only download chapters in this language."}
 	}
-dictassign $opts
+dict assign $opts
 
 if {$argc < 1} {
 	die $usage

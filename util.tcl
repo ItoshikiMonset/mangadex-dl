@@ -43,6 +43,14 @@ proc shift {_var {count 1}} {
 	return 0
 }
 
+
+# Assign the dict values to key-named variables (with s/[ -]/_/g applied to
+# them).
+proc ::tcl::dict::assign {dict} {
+	uplevel [list lassign [dict values $dict]] \
+		[lmap s [dict keys $dict] {string map {- _ " " _} $s}]
+}
+
 # Conditional dict get, sets _var only if the key is to be found in dict.
 # Returns 1 if it was found, 0 otherwise.
 proc ::tcl::dict::get? {dict _var args} {
@@ -54,7 +62,8 @@ proc ::tcl::dict::get? {dict _var args} {
 	return 0
 }
 namespace ensemble configure dict -map \
-    [linsert [namespace ensemble configure dict -map] end get? ::tcl::dict::get?]
+    [linsert [namespace ensemble configure dict -map] end \
+		 get? ::tcl::dict::get? assign ::tcl::dict::assign]
 
 # All-in-one CLI creation. Sets a pretty help notice and parses argv according
 # to flag/parametric options of the form "-opt ?param?".
@@ -152,13 +161,6 @@ proc autocli {_help _optres name short_descr synopsis {long_descr ""} optspec} {
 		}
 	}
 	return $result
-}
-
-# Assign the dict values to key-named variables (with s/[ -]/_/g applied to
-# them).
-proc dictassign {dict} {
-	uplevel [list lassign [dict values $dict]] \
-		[lmap s [dict keys $dict] {string map {- _ " " _} $s}]
 }
 
 # Remove some forbidden/annoying characters from str when used as POSIX path.

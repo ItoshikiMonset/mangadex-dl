@@ -60,7 +60,7 @@ autocli usage opts \
 		autodl-dir  {param "."  DIRECTORY "Where to auto download new chapters."}
 		single-feed {flag                 "Use a single feed instead of one per serie."}
 	}
-dictassign $opts
+dict assign $opts
 
 if {$argc < 1} {
 	die $usage
