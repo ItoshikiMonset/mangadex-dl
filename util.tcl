@@ -21,6 +21,11 @@ proc write_file {path data} {
 	close $chan
 }
 
+# Like lmap, but expr is used as an if argument to filter values
+proc lfilter {var list expr} {
+	tailcall lmap $var $list [list if $expr [list set $var] continue]
+}
+
 # Opposite of lappend.
 proc lprepend {_var args} {
 	upvar $_var var
@@ -170,4 +175,12 @@ proc path_sanitize {str} {
 # Check if a binary can be found by the sh(1)/exec[lv]p(3).
 proc executable_check {exename} {
 	! [catch [list exec sh -c [list command -v $exename] >/dev/null]]
+}
+
+proc is_dir_empty {path} {
+	if {![file isdirectory $path]} {
+		error "$path: not a directory"
+	}
+	set glob [glob -nocomplain -tails -directory $path * .*]
+	eq [lfilter x $glob {$x ne  "." && $x ne ".."}] ""
 }

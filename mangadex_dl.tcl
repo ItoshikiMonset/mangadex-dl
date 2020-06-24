@@ -63,9 +63,12 @@ foreach {chapter_id chapter_data} $chapters {
 	set chapter_name [chapter_format_name $serie_title $chapter_data]
 	set outdir [path_sanitize $chapter_name]
 	if {[file exists $outdir]} {
-		continue
+		if {![is_dir_empty $outdir]} {
+			continue
+		}
+	} else {
+		file mkdir $outdir
 	}
-	file mkdir $outdir
 	cd $outdir
 	puts "Downloading $chapter_name..."
 	chapter_dl $chapter_id $first_page $last_page
