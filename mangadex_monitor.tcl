@@ -90,7 +90,7 @@ if {[file exists $tstampdb_path]} {
 		die "$tstampdb_path: does not contain a Tcl dict"
 	}
 } else {
-	set tstampdb {}
+	set tstampdb [dict create]
 }
 
 if {$single_feed} {

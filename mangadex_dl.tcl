@@ -62,6 +62,9 @@ set serie_title [dict get $root manga title]
 foreach {chapter_id chapter_data} $chapters {
 	set chapter_name [chapter_format_name $serie_title $chapter_data]
 	set outdir [path_sanitize $chapter_name]
+	if {[file exists $outdir]} {
+		continue
+	}
 	file mkdir $outdir
 	cd $outdir
 	puts "Downloading $chapter_name..."

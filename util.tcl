@@ -43,7 +43,6 @@ proc shift {_var {count 1}} {
 	return 0
 }
 
-
 # Assign the dict values to key-named variables (with s/[ -]/_/g applied to
 # them).
 proc ::tcl::dict::assign {dict} {
