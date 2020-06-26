@@ -42,6 +42,6 @@ proc chapter_dl {chapter_id {first 0} {last end}} {
 
 	set urls [lmap x [lrange $page_array $first $last] \
 				  {string cat $server$hash/ $x}]
-	exec -ignorestderr curl --location --remote-name-all --connect-timeout 20 \
-		--retry 5 {*}$urls
+	catch {exec -ignorestderr curl --location --remote-name-all \
+		--connect-timeout 5 --max-time 15 --retry 5 {*}$urls}
 }

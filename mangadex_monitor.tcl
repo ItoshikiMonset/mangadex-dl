@@ -170,9 +170,13 @@ foreach entry $catalog {
 			file mkdir $outdir
 			cd $outdir
 			puts "Downloading $chapter_name..."
-			chapter_dl $chapter_id
+			if {[chapter_dl $chapter_id]} {
+				atom add_entry feed "$chapter_name" "Failed to download!"
+				file delete -force -- $outdir
+			} else {
+				atom add_entry feed "$chapter_name" "Downloaded to $outdir"
+			}
 			cd $orig_pwd
-			atom add_entry feed "$chapter_name" "Downloaded to $outdir"
 		} else {
 			atom add_entry feed "$chapter_name"
 		}

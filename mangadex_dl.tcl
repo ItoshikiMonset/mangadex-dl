@@ -71,6 +71,8 @@ foreach {chapter_id chapter_data} $chapters {
 	}
 	cd $outdir
 	puts "Downloading $chapter_name..."
-	chapter_dl $chapter_id $first_page $last_page
+	if {[chapter_dl $chapter_id $first_page $last_page]} {
+		file delete -force -- $outdir
+	}
 	cd $orig_pwd
 }

@@ -1,5 +1,10 @@
 namespace path {::tcl::mathop ::tcl::mathfunc}
 
+# Ternary
+proc ter {expr a {b ""}} {
+	tailcall if $expr [list string cat $a] else [list string cat $b]
+}
+
 # Graceful death, don't unwind like error.
 proc die {msg {code 1}} {
 	puts stderr $msg
