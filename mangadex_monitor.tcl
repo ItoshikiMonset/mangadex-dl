@@ -14,16 +14,6 @@ proc tstamp_sort {c1 c2} {
 	- [dict get $c1 timestamp] [dict get $c2 timestamp]
 }
 
-proc open_or_create_feed {path title} {
-	if {![file exists $path]} {
-		set feed [atom create $path $title]
-		atom write $feed
-	} else {
-		set feed [atom read $path]
-	}
-	return $feed
-}
-
 
 # Option and argument handling
 autocli usage opts \
@@ -96,7 +86,7 @@ if {[file exists $tstampdb_path]} {
 
 if {$single_feed} {
 	set feed_path [file join $datadir_path mangadex.xml]
-	set feed [open_or_create_feed $feed_path "new Mangadex chapters"]
+	set feed [atom read_or_create $feed_path "new Mangadex chapters"]
 }
 
 if {$autodl_dir eq ""} {
@@ -138,7 +128,7 @@ foreach entry $catalog {
 	if {!$single_feed} {
 		set feed_path [file join $datadir_path \
 						   [path_sanitize ${serie_title}_${serie_id}].xml]
-		set feed [open_or_create_feed $feed_path \
+		set feed [atom read_or_create $feed_path \
 					  "$serie_title - new Mangadex chapters"]
 	}
 
@@ -171,7 +161,7 @@ foreach entry $catalog {
 	# and group matches at least one group_name
 	foreach {chapter_id chapter_data} $chapters {
 		set chapter_name [chapter_format_name $serie_title $chapter_data]
-		if {$autodl && ($group eq "" || \
+		if {$autodl && ($group eq "" ||
 						[dict get $chapter_data group_name]   eq $group ||
 						[dict get $chapter_data group_name_2] eq $group ||
 						[dict get $chapter_data group_name_3] eq $group)} {

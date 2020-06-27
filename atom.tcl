@@ -1,5 +1,5 @@
 # Simple Atom reading/writing, exported functions:
-#     create, read, add_entry, write
+#	  create, read, add_entry, write
 package require tdom
 set scriptdir [file dirname [file dirname \
 							 [file normalize [file join [info script] dummy]]]]
@@ -63,6 +63,16 @@ namespace eval atom {
 		return $atom
 	}
 
+	proc read_or_create {path title} {
+		if {[file exists $path]} {
+			read $path
+		} else {
+			set ret [create $path $title]
+			atom write $ret
+			return $ret
+		}
+	}
+
 	proc write {atom} {
 		if {[dict get $atom modified] == 1} {
 			write_file [dict get $atom path] [[dict get $atom xml] asXML -indent 2]
@@ -95,6 +105,6 @@ namespace eval atom {
 		[select_nodes $doc //atom:feed/atom:updated/text()] nodeValue $timestamp
 	}
 
-	namespace export create read add_entry write
+	namespace export create read read_or_create add_entry write
 	namespace ensemble create
 }
