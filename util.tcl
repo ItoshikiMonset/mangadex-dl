@@ -13,7 +13,9 @@ proc die {msg {code 1}} {
 
 # Useful open/read/close wrapper.
 proc read_file {path} {
-	set chan [open $path]
+	if {[catch {open $path} chan]} {
+		die $chan
+	}
 	set result [read $chan]
 	close $chan
 	return $result
@@ -21,7 +23,9 @@ proc read_file {path} {
 
 # Useful open/puts/close wrapper.
 proc write_file {path data} {
-	set chan [open $path w]
+	if {[catch {open $path w} chan]} {
+		die $chan
+	}
 	puts $chan $data
 	close $chan
 }
@@ -87,8 +91,9 @@ namespace ensemble configure dict -map \
 # long_descr: optional long description in the form of list of lines.
 # optspec: dict of the form {key val} with
 #     key: option name without starting dash
-#     val: either {"flag" ?optdescr?} or
-#                 {"param" default_value ?val_name optdescr?}
+#     val: either {"flag" ?optdescr_line ...?}
+#                   or
+#                 {"param" default_value ?val_name optdescr_line ...?}
 #
 # Modify argv and argc to only leave the arguments. Returns nothing.
 proc autocli {_help _optres name short_descr synopsis {long_descr ""} optspec} {
@@ -116,8 +121,8 @@ proc autocli {_help _optres name short_descr synopsis {long_descr ""} optspec} {
 		if {$type eq "flag"} {
 			dict set result $key 0
 			append help "\n    -$key\n"
-			if {$vallen == 2} {
-				append help "        [lindex $val 1]\n"
+			foreach line [lrange $val 1 end] {
+				append help "        $line\n"
 			}
 		} elseif {$type eq "param"} {
 			if {$vallen < 2} {
@@ -126,12 +131,12 @@ proc autocli {_help _optres name short_descr synopsis {long_descr ""} optspec} {
 			set default [lindex $val 1]
 			dict set result $key $default
 			append help "\n    -$key"
-			if {$vallen == 4} {
+			if {$vallen >= 4} {
 				append help " [lindex $val 2]"
 			}
 			append help \n
-			if {$vallen == 3 || $vallen == 4} {
-				append help "        [lindex $val end]\n"
+			foreach line [lrange $val 3 end] {
+				append help "        $line\n"
 			}
 			if {$default ne ""} {
 				append help "        Defaults to \"$default\".\n"

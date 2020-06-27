@@ -1,6 +1,10 @@
 # Simple Atom reading/writing, exported functions:
 #     create, read, add_entry, write
 package require tdom
+set scriptdir [file dirname [file dirname \
+							 [file normalize [file join [info script] dummy]]]]
+source [file join $scriptdir util.tcl]
+
 
 namespace eval atom {
 	variable xmlns http://www.w3.org/2005/Atom
@@ -53,9 +57,7 @@ namespace eval atom {
 
 	proc read {path} {
 		set atom [dict create path [file normalize $path] modified 0]
-		set chan [open $path]
-		set doc [dom parse [::read $chan]]
-		close $chan
+		set doc [dom parse [read_file $chan]]
 		dict set atom xml $doc
 		dict set atom entry_count [llength [select_nodes $doc //atom:entry]]
 		return $atom
@@ -63,9 +65,7 @@ namespace eval atom {
 
 	proc write {atom} {
 		if {[dict get $atom modified] == 1} {
-			set chan [open [dict get $atom path] w]
-			puts $chan [[dict get $atom xml] asXML -indent 2]
-			close $chan
+			write_file [dict get $atom path] [[dict get $atom xml] asXML -indent 2]
 		}
 	}
 

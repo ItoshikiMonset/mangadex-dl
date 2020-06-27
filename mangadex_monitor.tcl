@@ -56,8 +56,9 @@ autocli usage opts \
 	{
 		proxy       {param ""   PROXY_URL "Set the curl HTTP/HTTPS proxy."}
 		lang        {param "gb" LANG_CODE "Only monitor chapters in this language."}
-		autodl      {flag                 "Automatically download new chapters."}
-		autodl-dir  {param "."  DIRECTORY "Where to auto download new chapters."}
+		autodl      {flag                 "Set the \"autodl\" option for every serie."}
+		autodl-dir  {param ""   DIRECTORY "Where to auto download new chapters." \
+						                  "Defaults to the same directory as CATALOG."}
 		single-feed {flag                 "Use a single feed instead of one per serie."}
 	}
 dict assign $opts
@@ -96,6 +97,14 @@ if {[file exists $tstampdb_path]} {
 if {$single_feed} {
 	set feed_path [file join $datadir_path mangadex.xml]
 	set feed [open_or_create_feed $feed_path "new Mangadex chapters"]
+}
+
+if {$autodl_dir eq ""} {
+	set autodl_dir $datadir_path
+} elseif {![file isdirectory $autodl_dir]} {
+	die "$autodl_dir: directory not found"
+} elseif {![file writeable $autodl_dir] || ![file executable $autodl_dir]} {
+	die "$autodl_dir: permission to access or write denied"
 }
 
 # Loop over the catalog entries
