@@ -57,7 +57,7 @@ namespace eval atom {
 
 	proc read {path} {
 		set atom [dict create path [file normalize $path] modified 0]
-		set doc [dom parse [read_file $chan]]
+		set doc [dom parse [read_file $path]]
 		dict set atom xml $doc
 		dict set atom entry_count [llength [select_nodes $doc //atom:entry]]
 		return $atom
