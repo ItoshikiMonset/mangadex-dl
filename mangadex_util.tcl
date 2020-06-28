@@ -34,7 +34,8 @@ proc chapter_format_name {serie_name chapter_info} {
 # Trivial wrapper
 proc json_dl {url} {
 	global user_agent
-	json::json2dict [exec curl --user-agent $user_agent --silent --location $url]
+	json::json2dict [exec curl --compressed --location --silent \
+						 --user-agent $user_agent $url]
 }
 
 # Download the pages of a chapters starting at page $first and ending at page
