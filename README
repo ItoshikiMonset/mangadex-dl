@@ -82,11 +82,11 @@ Some useful tools to interface with Mangadex via its JSON API:
 |         Defaults to "gb".                                                 |
 |                                                                           |
 |     -autodl                                                               |
-|         Automatically download new chapters.                              |
+|         Set the "autodl" option for every serie.                          |
 |                                                                           |
 |     -autodl-dir DIRECTORY                                                 |
 |         Where to auto download new chapters.                              |
-|         Defaults to ".".                                                  |
+|         Defaults to the same directory as CATALOG.                        |
 |                                                                           |
 |     -single-feed                                                          |
 |         Use a single feed instead of one per serie.                       |

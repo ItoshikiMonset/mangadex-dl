@@ -1,4 +1,5 @@
 #!/usr/bin/env tclsh
+# TODO: download all series with one curl invocation (so we get pipelining) and use ::json::many-json2dict
 set scriptdir [file dirname [file dirname \
 							 [file normalize [file join [info script] dummy]]]]
 source [file join $scriptdir util.tcl]
