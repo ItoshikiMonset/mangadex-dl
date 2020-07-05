@@ -166,7 +166,8 @@ foreach entry $catalog {
 						[dict get $chapter_data group_name]   eq $group ||
 						[dict get $chapter_data group_name_2] eq $group ||
 						[dict get $chapter_data group_name_3] eq $group)} {
-			set outdir [file join $autodl_dir [path_sanitize $chapter_name]]
+			set outdir [file normalize \
+							[file join $autodl_dir [path_sanitize $chapter_name]]]
 			file mkdir $outdir
 			cd $outdir
 			puts "Downloading $chapter_name..."
