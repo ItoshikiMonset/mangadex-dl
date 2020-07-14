@@ -113,7 +113,11 @@ foreach entry $catalog {
 		continue
 	}
 	puts "Downloading serie JSON ($serie_url)..."
-	set root [json_dl https://mangadex.org/api/manga/$serie_id]
+	if {[catch {api_dl manga $serie_id} json]} {
+		puts stderr "Failure to download serie JSON!\n\n$err"
+		continue
+	}
+	set root [json::json2dict $json]
 
 	# Parse the entry extra options
 	set autodl $autodl_default
@@ -171,8 +175,8 @@ foreach entry $catalog {
 			file mkdir $outdir
 			cd $outdir
 			puts "Downloading $chapter_name..."
-			if {[chapter_dl $chapter_id]} {
-				atom add_entry feed "$chapter_name" "Failed to download!"
+			if {[catch {chapter_dl $chapter_id} err]} {
+				atom add_entry feed "$chapter_name" "Failed download!\n\n$err"
 				file delete -force -- $outdir
 			} else {
 				atom add_entry feed "$chapter_name" "Downloaded to $outdir"

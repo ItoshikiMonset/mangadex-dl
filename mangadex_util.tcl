@@ -3,8 +3,9 @@ set scriptdir [file dirname [file dirname \
 							 [file normalize [file join [info script] dummy]]]]
 source [file join $scriptdir util.tcl]
 
+set URL_BASE https://mangadex.org
+set USER_AGENT {Mozilla/5.0 (Windows NT 6.1; WOW64; rv:54.0) Gecko/20100101 Firefox/54.0}
 
-set user_agent {Mozilla/5.0 (Windows NT 6.1; WOW64; rv:54.0) Gecko/20100101 Firefox/54.0}
 
 # Produce a daiz approved name for a chapter
 proc chapter_format_name {serie_name chapter_info} {
@@ -31,23 +32,31 @@ proc chapter_format_name {serie_name chapter_info} {
 	append ret " \[$groups\]"
 }
 
+# Wrapper to set common curl options
+proc curl {args} {
+	global USER_AGENT
+	exec -ignorestderr curl \
+		--compressed \
+		--connect-timeout 5 \
+		--fail \
+		--fail-early \
+		--location \
+		--max-time 15 \
+		--retry 5 \
+		--user-agent $USER_AGENT \
+		{*}$args
+}
+
 # Trivial wrapper
-proc json_dl {url} {
-	global user_agent
-	json::json2dict [exec curl --compressed --location --silent \
-						 --user-agent $user_agent $url]
+proc api_dl {arg id} {
+	global URL_BASE
+	curl --no-progress-meter $URL_BASE/api/$arg/$id
 }
 
 # Download the pages of a chapters starting at page $first and ending at page
 # $last in the CWD
-proc chapter_dl {chapter_id {first 0} {last end}} {
-	global user_agent
-	set json [json_dl https://mangadex.org/api/chapter/$chapter_id]
+proc chapter_dl {chapter_id} {
+	set json [json::json2dict [api_dl chapter $chapter_id]]
 	dict assign $json
-
-	set urls [lmap x [lrange $page_array $first $last] \
-				  {string cat $server$hash/ $x}]
-	catch {exec -ignorestderr curl --connect-timeout 5 --fail-early --location \
-			   --max-time 15 --remote-name-all --retry 5 --user-agent $user_agent \
-			   {*}$urls}
+	curl --remote-name-all $server$hash/\{[join $page_array ,]\}
 }

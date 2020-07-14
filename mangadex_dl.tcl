@@ -21,9 +21,8 @@ autocli usage opts \
 	} \
 	{
 		proxy      {param ""   PROXY_URL "Set the curl HTTP/HTTPS proxy."}
-		first-page {param 0    PAGE_NO   "Start downloading from PAGE_NO (see lrange(n))."}
-		last-page  {param end  PAGE_NO   "Stop downloading at PAGE_NO."}
 		lang       {param "gb" LANG_CODE "Only download chapters in this language."}
+		covers     {flag                 "Download the serie covers too."}
 	}
 dict assign $opts
 
@@ -43,7 +42,10 @@ if {![regexp {https://(?:www\.)?mangadex\.org/title/(\d+)/[^/]+} $serie_url -> s
 	die "$serie_url: invalid mangadex URL"
 }
 puts "Downloading serie JSON..."
-set root [json_dl https://mangadex.org/api/manga/$serie_id]
+if {[catch {api_dl manga $serie_id} json]} {
+	die "Failure to download serie JSON!\n\n$err"
+}
+set root [json::json2dict $json]
 
 # Filter chapters by language then number if required
 set chapters [dict get $root chapter]
@@ -57,6 +59,8 @@ if {$argc >= 1} {
 }
 
 # Iterate over the filtered chapters and download
+set count 1
+set total [llength $chapters]
 set orig_pwd [pwd]
 set serie_title [dict get $root manga title]
 foreach {chapter_id chapter_data} $chapters {
@@ -70,10 +74,31 @@ foreach {chapter_id chapter_data} $chapters {
 		file mkdir $outdir
 	}
 	cd $outdir
-	puts "Downloading $chapter_name..."
-	if {[chapter_dl $chapter_id $first_page $last_page]} {
-		puts "Failure to download $chapter_name!"
+	puts "[$count/$total] Downloading $chapter_name..."
+	if {[catch {chapter_dl $chapter_id} err]} {
+		puts "Failure to download $chapter_name!\n\n$err"
 		file delete -force -- $outdir
 	}
 	cd $orig_pwd
+	incr count
+}
+
+if {$covers} {
+	puts "Downloading serie covers JSON..."
+	if {[catch {api_dl covers $serie_id} json]} {
+		die "Failure to download serie covers JSON!\n\n$err"
+	}
+	set root [json::json2dict $json]
+	set covers [dict get $root covers]
+	curl --remote-name-all $URL_BASE\{[join $covers ,]\}
+	foreach cover [lmap x $covers {file tail $x}] {
+		regexp {\d+v([\d.]+)\.(jpe?g|png)$} $cover -> volume extension
+		if {[string is entier $volume]} {
+			set volume [format %02d $volume]
+		} elseif {[string is double $volume]} {
+			set volume [format %04.1f $volume]
+		}
+		file rename $cover \
+			[path_sanitize "$serie_title - c000 (v$volume) - Cover.$extension"]
+	}
 }

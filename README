@@ -25,17 +25,12 @@ Some useful tools to interface with Mangadex via its JSON API:
 |     -proxy PROXY_URL                                                    |
 |         Set the curl HTTP/HTTPS proxy.                                  |
 |                                                                         |
-|     -first-page PAGE_NO                                                 |
-|         Start downloading from PAGE_NO (see lrange(n)).                 |
-|         Defaults to "0".                                                |
-|                                                                         |
-|     -last-page PAGE_NO                                                  |
-|         Stop downloading at PAGE_NO.                                    |
-|         Defaults to "end".                                              |
-|                                                                         |
 |     -lang LANG_CODE                                                     |
 |         Only download chapters in this language.                        |
 |         Defaults to "gb".                                               |
+|                                                                         |
+|     -covers                                                             |
+|         Download the serie covers too.                                  |
 |                                                                         |
 +-------------------------------------------------------------------------+
 
