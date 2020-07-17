@@ -60,7 +60,7 @@ if {$argc >= 1} {
 
 # Iterate over the filtered chapters and download
 set count 1
-set total [llength $chapters]
+set total [llength [dict keys $chapters]]
 set orig_pwd [pwd]
 set serie_title [dict get $root manga title]
 foreach {chapter_id chapter_data} $chapters {
@@ -74,7 +74,7 @@ foreach {chapter_id chapter_data} $chapters {
 		file mkdir $outdir
 	}
 	cd $outdir
-	puts "[$count/$total] Downloading $chapter_name..."
+	puts "\[$count/$total\] Downloading $chapter_name..."
 	if {[catch {chapter_dl $chapter_id} err]} {
 		puts "Failure to download $chapter_name!\n\n$err"
 		file delete -force -- $outdir
