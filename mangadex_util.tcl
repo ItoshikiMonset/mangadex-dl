@@ -59,4 +59,5 @@ proc chapter_dl {chapter_id} {
 	set json [json::json2dict [api_dl chapter $chapter_id]]
 	dict assign $json
 	curl --remote-name-all $server$hash/\{[join $page_array ,]\}
+	rename_mtime .
 }

@@ -194,3 +194,22 @@ proc is_dir_empty {path} {
 	set glob [glob -nocomplain -tails -directory $path * .*]
 	eq [lfilter x $glob {$x ne  "." && $x ne ".."}] ""
 }
+
+
+# glob wrapper sorting by mtime
+proc glob_mtime {args} {
+	lmap x [lsort -integer -index 0 \
+				[lmap x [glob {*}$args] {list [file mtime $x] $x}]] \
+		{lindex $x 1}
+}
+
+# Rename all the files in dir according to their mtime
+proc rename_mtime {dir} {
+	set paths [glob_mtime -directory $dir *]
+	set fmt %0[string length [llength $paths]]u
+	foreach path $paths {
+		incr count
+		set target [file join $dir [format $fmt $count][file extension $path]]
+		file rename -- $path $target
+	}
+}
