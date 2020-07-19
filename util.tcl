@@ -43,18 +43,16 @@ proc lprepend {_var args} {
 }
 
 # Like shift(1).
-proc shift {_var {count 1}} {
-	upvar $_var var
-	global argv argc
-
-	if {$argc >= $count} {
-		incr count -1
-		set var [lrange $argv 0 $count]
-		set argv [lreplace $argv 0 $count]
-		incr argc -1
-		return 1
+proc shift {var args} {
+	lprepend args $var
+	set argslen [llength $args]
+	global argc
+	if {$argslen > $argc} {
+		return 0
 	}
-	return 0
+	uplevel "global argv; set argv \[lassign \$argv $args\]"
+	set argc [expr {$argc - $argslen}]
+	return 1
 }
 
 # Assign the dict values to key-named variables (with s/[ -]/_/g applied to
