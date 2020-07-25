@@ -208,6 +208,6 @@ proc rename_mtime {dir} {
 	foreach path $paths {
 		incr count
 		set target [file join $dir [format $fmt $count][file extension $path]]
-		file rename -- $path $target
+		file rename -force -- $path $target
 	}
 }
