@@ -98,8 +98,10 @@ if {$autodl_dir eq ""} {
 	die "$autodl_dir: permission to access or write denied"
 }
 
+
 # Loop over the catalog entries
 set orig_pwd [pwd]
+set epoch [clock seconds]
 foreach entry $catalog {
 	if {![string is list $entry] || [llength $entry] == 0} {
 		puts stderr "$entry: not a valid catalog entry"
@@ -143,6 +145,10 @@ foreach entry $catalog {
 		set chapters [dict filter $chapters script {key val} \
 						  {string equal [dict get $val lang_code] $lang}]
 	}
+
+	# Ignore chapters not yet released
+	set chapters [dict filter $chapters script {key val} \
+					  {< [dict get $val timestamp] $epoch}]
 	# Sort chapters by their timestamp (oldest first)
 	set chapters [lsort -stride 2 -index 1 -command tstamp_sort $chapters]
 	if {[llength $chapters] == 0} {
