@@ -89,6 +89,9 @@ if {$covers} {
 	}
 	set root [json::json2dict $json]
 	set covers [dict get $root covers]
+	if {$covers eq ""} {
+		return
+	}
 	curl --remote-name-all $URL_BASE\{[join $covers ,]\}
 	foreach cover [lmap x $covers {file tail $x}] {
 		regexp {\d+v([\d.]+)\.(jpe?g|png)$} $cover -> volume extension

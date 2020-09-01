@@ -116,10 +116,13 @@ foreach entry $catalog {
 	}
 	puts "Downloading serie JSON ($serie_url)..."
 	if {[catch {api_dl manga $serie_id} json]} {
-		puts stderr "Failure to download serie JSON!\n\n$err"
+		puts stderr "Failure to download serie JSON!\n\n$json"
 		continue
 	}
-	set root [json::json2dict $json]
+	if {[catch {json::json2dict $json} root]} {
+		puts stderr "Invalid serie JSON or curl uncatched error!\n\n$json"
+		continue
+	}
 
 	# Parse the entry extra options
 	set autodl $autodl_default
