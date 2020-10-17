@@ -116,7 +116,7 @@ foreach entry $catalog {
 	}
 	puts "Downloading serie JSON ($serie_url)..."
 	if {[catch {api_dl manga $serie_id} json]} {
-		puts stderr "Failure to download serie JSON!\n\n$json"
+		puts stderr "Failed to download serie JSON!\n\n$json"
 		continue
 	}
 	if {[catch {json::json2dict $json} root]} {

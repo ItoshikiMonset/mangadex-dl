@@ -12,9 +12,9 @@ proc chapter_format_name {serie_name chapter_info} {
 	dict assign $chapter_info
 	set ret "$serie_name - c"
 
-	if {[string is entier $chapter]} {
+	if {[string is entier -strict $chapter]} {
 		append ret [format %03d $chapter]
-	} elseif {[string is double $chapter]} {
+	} elseif {[string is double -strict $chapter]} {
 		append ret [format %05.1f $chapter]
 	} else {
 		append ret $chapter
@@ -41,7 +41,7 @@ proc curl {args} {
 		--fail \
 		--fail-early \
 		--location \
-		--max-time 15 \
+		--max-time 30 \
 		--retry 5 \
 		--user-agent $USER_AGENT \
 		{*}$args
@@ -58,6 +58,15 @@ proc api_dl {arg id} {
 proc chapter_dl {chapter_id} {
 	set json [json::json2dict [api_dl chapter $chapter_id]]
 	dict assign $json
-	curl --remote-name-all $server$hash/\{[join $page_array ,]\}
-	rename_mtime .
+
+	if {[catch {curl --remote-name-all $server$hash/\{[join $page_array ,]\}} err errdict]} {
+		if {[info exists server_fallback]} {
+			puts stderr "Trying fallback server"
+			curl --remote-name-all $server_fallback$hash/\{[join $page_array ,]\}
+		} else {
+			dict incr errdict -level
+			return -options $errdict $err
+		}
+	}
+	rename_mtime
 }

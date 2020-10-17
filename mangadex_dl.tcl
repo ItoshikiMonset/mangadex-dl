@@ -43,7 +43,7 @@ if {![regexp {https://(?:www\.)?mangadex\.org/title/(\d+)/[^/]+} $serie_url -> s
 }
 puts "Downloading serie JSON..."
 if {[catch {api_dl manga $serie_id} json]} {
-	die "Failure to download serie JSON!\n\n$err"
+	die "Failure to download serie JSON!\n\n$json"
 }
 set root [json::json2dict $json]
 
@@ -76,7 +76,7 @@ foreach {chapter_id chapter_data} $chapters {
 	incr count
 	puts "\[$count/$total\] Downloading $chapter_name..."
 	if {[catch {chapter_dl $chapter_id} err]} {
-		puts "Failure to download $chapter_name!\n\n$err"
+		puts stderr "Failed to download $chapter_name!\n\n$err"
 		file delete -force -- $outdir
 	}
 	cd $orig_pwd
@@ -85,7 +85,7 @@ foreach {chapter_id chapter_data} $chapters {
 if {$covers} {
 	puts "Downloading serie covers JSON..."
 	if {[catch {api_dl covers $serie_id} json]} {
-		die "Failure to download serie covers JSON!\n\n$err"
+		die "Failed to download serie covers JSON!\n\n$json"
 	}
 	set root [json::json2dict $json]
 	set covers [dict get $root covers]

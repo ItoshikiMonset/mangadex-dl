@@ -202,7 +202,7 @@ proc glob_mtime {args} {
 }
 
 # Rename all the files in dir according to their mtime
-proc rename_mtime {dir} {
+proc rename_mtime {{dir .}} {
 	set paths [glob_mtime -directory $dir *]
 	set fmt %0[string length [llength $paths]]u
 	foreach path $paths {
