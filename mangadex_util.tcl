@@ -62,7 +62,8 @@ proc chapter_dl {chapter_id} {
 	if {[catch {curl --remote-name-all $server$hash/\{[join $page_array ,]\}} err errdict]} {
 		if {[info exists server_fallback]} {
 			puts stderr "Trying fallback server"
-			curl --remote-name-all $server_fallback$hash/\{[join $page_array ,]\}
+			curl --continue-at - --remote-name-all \
+				$server_fallback$hash/\{[join $page_array ,]\}
 		} else {
 			dict incr errdict -level
 			return -options $errdict $err
