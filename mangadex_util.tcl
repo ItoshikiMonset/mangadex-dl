@@ -8,9 +8,9 @@ set USER_AGENT {Mozilla/5.0 (Windows NT 6.1; WOW64; rv:54.0) Gecko/20100101 Fire
 
 
 # Produce a daiz approved name for a chapter
-proc chapter_format_name {serie_name chapter_info} {
-	dict assign $chapter_info
-	set ret "$serie_name - c"
+proc chapter_caption {serie_title chapter_data group_names} {
+	dict assign $chapter_data
+	set ret "$serie_title - c"
 
 	if {[string is entier -strict $chapter]} {
 		append ret [format %03d $chapter]
@@ -22,14 +22,7 @@ proc chapter_format_name {serie_name chapter_info} {
 	if {$volume ne ""} {
 		append ret " ([format v%02d $volume])"
 	}
-	set groups $group_name
-	if {$group_name_2 ne "null"} {
-		append groups ", $group_name_2"
-	}
-	if {$group_name_3 ne "null"} {
-		append groups ", $group_name_3"
-	}
-	append ret " \[$groups\]"
+	append ret " \[[join $group_names {, }]\]"
 }
 
 # Wrapper to set common curl options
@@ -47,27 +40,46 @@ proc curl {args} {
 		{*}$args
 }
 
-# Trivial wrapper
-proc api_dl {arg id} {
+# Wrapper around curl to download each url to the corresponding outname
+# args is used as additional arguments
+proc curl_map {urls outnames args} {
+	foreach url $urls outname $outnames {
+		lappend args -o $outname $url
+	}
+	curl {*}$args
+}
+
+# Trivial mangadex api download wrapper
+proc api_dl args {
 	global URL_BASE
-	curl --no-progress-meter $URL_BASE/api/$arg/$id
+	curl --no-progress-meter $URL_BASE/api/v2/[join $args /]
 }
 
 # Download the pages of a chapters starting at page $first and ending at page
 # $last in the CWD
 proc chapter_dl {chapter_id} {
 	set json [json::json2dict [api_dl chapter $chapter_id]]
-	dict assign $json
 
-	if {[catch {curl --remote-name-all $server$hash/\{[join $page_array ,]\}} err errdict]} {
-		if {[info exists server_fallback]} {
+	set code [dict get $json code]
+	if {$code != 200} {
+		error "Code $code (status [dict get $json status]) received"
+	}
+
+	dict assign [dict get $json data]
+
+	set urls [lmap page $pages {string cat $server$hash/$page}]
+	set outnames [lmap num [lseq_zerofmt 1 [llength $pages]] page $pages {
+		string cat $num [file extension $page]
+	}]
+
+	if {[catch {curl_map $urls $outnames} err errdict]} {
+		if {[info exists serverFallback]} {
 			puts stderr "Trying fallback server"
-			curl --continue-at - --remote-name-all \
-				$server_fallback$hash/\{[join $page_array ,]\}
+			set urls [lmap page $pages {string cat $serverFallback$hash/$page}]
+			curl_map $urls $outnames --continue-at -
 		} else {
 			dict incr errdict -level
 			return -options $errdict $err
 		}
 	}
-	rename_mtime
 }

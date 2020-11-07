@@ -42,6 +42,26 @@ proc lprepend {_var args} {
 	set var [linsert $var [set var 0] {*}$args]
 }
 
+# Like seq(1)
+proc lseq {start end {step 1}} {
+	set res {}
+	for {set i $start} {$i <= $end} {incr i $step} {
+		lappend res $i
+	}
+	return $res
+}
+
+# Like lseq, but use format so that elements are padded with leading
+# zeros to get the same string width
+proc lseq_zerofmt {start end {step 1}} {
+	set res {}
+	set fmt %0[string length $end]u
+	for {set i $start} {$i <= $end} {incr i $step} {
+		lappend res [format $fmt $i]
+	}
+	return $res
+}
+
 # Like shift(1).
 proc shift {var args} {
 	lprepend args $var

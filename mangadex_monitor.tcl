@@ -115,22 +115,28 @@ foreach entry $catalog {
 		continue
 	}
 	puts "Downloading serie JSON ($serie_url)..."
-	if {[catch {api_dl manga $serie_id} json]} {
+	if {[catch {api_dl manga $serie_id chapters} json]} {
 		puts stderr "Failed to download serie JSON!\n\n$json"
 		continue
 	}
 	if {[catch {json::json2dict $json} root]} {
-		puts stderr "Invalid serie JSON or curl uncatched error!\n\n$json"
+		puts stderr "Invalid serie JSON or curl uncatched error!\n\n$root"
+		continue
+	}
+	dict assign $root
+	dict assign $data
+	if {$code != 200} {
+		puts stderr "Code $code (status: $status) received"
 		continue
 	}
 
 	# Parse the entry extra options
 	set autodl $autodl_default
-	set group ""
-	set serie_title [dict get $root manga title]
+	set group_filter ""
+	set serie_title [dict get [lindex $chapters 0] mangaTitle]
 	if {[llength $entry] != 0} {
 		dict get? $entry autodl autodl
-		dict get? $entry group group
+		dict get? $entry group_filter group
 		dict get? $entry serie_title title
 	}
 
@@ -142,22 +148,19 @@ foreach entry $catalog {
 					  "$serie_title - new Mangadex chapters"]
 	}
 
-	set chapters [dict get $root chapter]
 	# Filter chapters by language
 	if {$lang ne ""} {
-		set chapters [dict filter $chapters script {key val} \
-						  {string equal [dict get $val lang_code] $lang}]
+		set chapters [lfilter ch $chapters {[dict get $ch language] eq $lang}]
 	}
 
 	# Ignore chapters not yet released
-	set chapters [dict filter $chapters script {key val} \
-					  {< [dict get $val timestamp] $epoch}]
-	# Sort chapters by their timestamp (oldest first)
-	set chapters [lsort -stride 2 -index 1 -command tstamp_sort $chapters]
+	set chapters [lfilter ch $chapters {[dict get $ch timestamp] < $epoch}]
 	if {[llength $chapters] == 0} {
 		puts stderr "$serie_url: no chapter found"
 		continue
 	}
+	# Sort chapters by their timestamp (oldest first)
+	set chapters [lsort -command tstamp_sort $chapters]
 
 	# Compare local with remote timestamp and filter chapters to only keep
 	# the new ones; if new chapters there are
@@ -168,31 +171,30 @@ foreach entry $catalog {
 	if {$no_local_tstamp || $local_tstamp == $remote_tstamp} {
 		continue
 	}
-	set chapters [dict filter $chapters script {key val} \
-					  {> [dict get $val timestamp] $local_tstamp}]
+	set chapters [lfilter ch $chapters \
+					  {[dict get $ch timestamp] > $local_tstamp}]
 
 	# Loop over every new chapter, append to feed and download if autodl is set
 	# and group matches at least one group_name
-	foreach {chapter_id chapter_data} $chapters {
-		set chapter_name [chapter_format_name $serie_title $chapter_data]
-		if {$autodl && ($group eq "" ||
-						[dict get $chapter_data group_name]   eq $group ||
-						[dict get $chapter_data group_name_2] eq $group ||
-						[dict get $chapter_data group_name_3] eq $group)} {
+	foreach ch $chapters {
+		set ch_group_names \
+			[lmap ch_gid [dict get $ch groups] {dict get $groups $ch_gid}]
+		set ch_caption [chapter_caption $serie_title $ch $ch_group_names]
+		if {$autodl && ($group_filter eq "" || $group_filter in $ch_group_names)} {
 			set outdir [file normalize \
-							[file join $autodl_dir [path_sanitize $chapter_name]]]
+							[file join $autodl_dir [path_sanitize $ch_caption]]]
 			file mkdir $outdir
 			cd $outdir
-			puts "Downloading $chapter_name..."
-			if {[catch {chapter_dl $chapter_id} err]} {
-				atom add_entry feed "$chapter_name" "Failed download!\n\n$err"
+			puts "Downloading $ch_caption..."
+			if {[catch {chapter_dl [dict get $ch id]} err]} {
+				atom add_entry feed "$ch_caption" "Failed download!\n\n$err"
 				file delete -force -- $outdir
 			} else {
-				atom add_entry feed "$chapter_name" "Downloaded to $outdir"
+				atom add_entry feed "$ch_caption" "Downloaded to $outdir"
 			}
 			cd $orig_pwd
 		} else {
-			atom add_entry feed "$chapter_name"
+			atom add_entry feed "$ch_caption"
 		}
 	}
 	if {!$single_feed} {

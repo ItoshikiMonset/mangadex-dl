@@ -41,30 +41,42 @@ if {$proxy ne ""} {
 if {![regexp {https://(?:www\.)?mangadex\.org/title/(\d+)/[^/]+} $serie_url -> serie_id]} {
 	die "$serie_url: invalid mangadex URL"
 }
-puts "Downloading serie JSON..."
-if {[catch {api_dl manga $serie_id} json]} {
-	die "Failure to download serie JSON!\n\n$json"
-}
-set root [json::json2dict $json]
 
-# Filter chapters by language then number if required
-set chapters [dict get $root chapter]
-if {$lang ne ""} {
-	set chapters [dict filter $chapters script {key val} \
-					  {string equal [dict get $val lang_code] $lang}]
+puts "Downloading serie JSON ($serie_url)..."
+if {[catch {api_dl manga $serie_id chapters} json]} {
+	puts stderr "Failed to download serie JSON!\n\n$json"
+	continue
 }
+if {[catch {json::json2dict $json} root]} {
+	puts stderr "Invalid serie JSON or curl uncatched error!\n\n$root"
+	continue
+}
+dict assign $root
+dict assign $data
+if {$code != 200} {
+	puts stderr "Code $code (status: $status) received"
+	continue
+}
+
+# Filter chapters by language then number arguments if required
+if {$lang ne ""} {
+	set chapters [lfilter ch $chapters {[dict get $ch language] eq $lang}]
+}
+
 if {$argc >= 1} {
-	set chapters [dict filter $chapters script {key val} \
-					  {in [dict get $val chapter] $argv}]
+	set chapters [lfilter ch $chapters {[dict get $ch chapter] in $argv}]
 }
 
 # Iterate over the filtered chapters and download
-set total [llength [dict keys $chapters]]
+set total [llength $chapters]
 set orig_pwd [pwd]
-set serie_title [dict get $root manga title]
-foreach {chapter_id chapter_data} $chapters {
-	set chapter_name [chapter_format_name $serie_title $chapter_data]
-	set outdir [file normalize [path_sanitize $chapter_name]]
+set serie_title [dict get [lindex $chapters 0] mangaTitle]
+
+foreach ch [lreverse $chapters] {
+	set ch_group_names \
+		[lmap ch_gid [dict get $ch groups] {dict get $groups $ch_gid}]
+	set ch_caption [chapter_caption $serie_title $ch $ch_group_names]
+	set outdir [file normalize [path_sanitize $ch_caption]]
 	if {[file exists $outdir]} {
 		if {![is_dir_empty $outdir]} {
 			continue
@@ -74,9 +86,9 @@ foreach {chapter_id chapter_data} $chapters {
 	}
 	cd $outdir
 	incr count
-	puts "\[$count/$total\] Downloading $chapter_name..."
-	if {[catch {chapter_dl $chapter_id} err]} {
-		puts stderr "Failed to download $chapter_name!\n\n$err"
+	puts "\[$count/$total\] Downloading $ch_caption..."
+	if {[catch {chapter_dl [dict get $ch id]} err]} {
+		puts stderr "Failed to download $ch_caption!\n\n$err"
 		file delete -force -- $outdir
 	}
 	cd $orig_pwd
@@ -84,23 +96,36 @@ foreach {chapter_id chapter_data} $chapters {
 
 if {$covers} {
 	puts "Downloading serie covers JSON..."
-	if {[catch {api_dl covers $serie_id} json]} {
+	if {[catch {api_dl manga $serie_id covers} json]} {
 		die "Failed to download serie covers JSON!\n\n$json"
 	}
-	set root [json::json2dict $json]
-	set covers [dict get $root covers]
-	if {$covers eq ""} {
+	if {[catch {json::json2dict $json} root]} {
+		puts stderr "Invalid serie JSON or curl uncatched error!\n\n$root"
+		continue
+	}
+	dict assign $root
+	dict assign $data
+	if {$code != 200} {
+		puts stderr "Code $code (status: $status) received"
+		continue
+	}
+
+	if {[llength $data] == 0} {
+		puts stderr "No cover to be found"
 		return
 	}
-	curl --remote-name-all $URL_BASE\{[join $covers ,]\}
-	foreach cover [lmap x $covers {file tail $x}] {
-		regexp {\d+v([\d.]+)\.(jpe?g|png)$} $cover -> volume extension
+	foreach cov $data {
+		dict assign $cov
+		regexp {\.([^?]+)\?\d+$} $url -> ext
 		if {[string is entier $volume]} {
 			set volume [format %02d $volume]
 		} elseif {[string is double $volume]} {
 			set volume [format %04.1f $volume]
 		}
-		file rename $cover \
-			[path_sanitize "$serie_title - c000 (v$volume) - Cover.$extension"]
+
+		lappend urls $url
+		lappend outnames \
+			[path_sanitize "$serie_title - c000 (v$volume) - Cover.$ext"]
 	}
+	curl_map $urls $outnames
 }
