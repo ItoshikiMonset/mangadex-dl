@@ -104,7 +104,7 @@ if {$covers} {
 		continue
 	}
 	dict assign $root
-	dict assign $data
+
 	if {$code != 200} {
 		puts stderr "Code $code (status: $status) received"
 		continue
@@ -116,7 +116,7 @@ if {$covers} {
 	}
 	foreach cov $data {
 		dict assign $cov
-		regexp {\.([^?]+)\?\d+$} $url -> ext
+		regexp {\.([a-z]+)\?\d+$} $url -> ext
 		if {[string is entier $volume]} {
 			set volume [format %02d $volume]
 		} elseif {[string is double $volume]} {
