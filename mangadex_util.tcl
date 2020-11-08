@@ -67,7 +67,7 @@ proc chapter_dl {chapter_id} {
 
 	dict assign [dict get $json data]
 
-	set urls [lmap page $pages {string cat $server$hash/$page}]
+	set urls [lprefix $pages $server$hash/]
 	set outnames [lmap num [lseq_zerofmt 1 [llength $pages]] page $pages {
 		string cat $num [file extension $page]
 	}]
@@ -75,7 +75,7 @@ proc chapter_dl {chapter_id} {
 	if {[catch {curl_map $urls $outnames} err errdict]} {
 		if {[info exists serverFallback]} {
 			puts stderr "Trying fallback server"
-			set urls [lmap page $pages {string cat $serverFallback$hash/$page}]
+			set urls [lprefix $pages $serverFallback$hash/]
 			curl_map $urls $outnames --continue-at -
 		} else {
 			dict incr errdict -level

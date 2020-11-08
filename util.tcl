@@ -1,8 +1,11 @@
 namespace path {::tcl::mathop ::tcl::mathfunc}
 
+# Identity function
+proc id {x} {set x}
+
 # Ternary
 proc ter {expr a {b ""}} {
-	tailcall if $expr [list string cat $a] else [list string cat $b]
+	tailcall if $expr [list id $a] else [list id $b]
 }
 
 # Graceful death, don't unwind like error.
@@ -40,6 +43,16 @@ proc lprepend {_var args} {
 	upvar $_var var
 	lappend var ;# Used as a an "is a list" check and to do var creation
 	set var [linsert $var [set var 0] {*}$args]
+}
+
+# Append suffix to all the elements of list and return the resulting list
+proc lsuffix {list suffix} {
+	lmap x $list {id $x$suffix}
+}
+
+# Prepend prefix to all the elements of list and return the resulting list
+proc lprefix {list prefix} {
+	lmap x $list {id $prefix$x}
 }
 
 # Like seq(1)
@@ -122,7 +135,7 @@ proc autocli {_help _optres name short_descr synopsis {long_descr ""} optspec} {
 	append help "\nSYNOPSIS\n    $name $synopsis\n"
 	if {$long_descr ne ""} {
 		append help "\nDESCRIPTION\n"
-		append help [join [lmap x $long_descr {string cat "    $x"}] \n]
+		append help [join [lprefix $long_descr "    "] \n]
 		append help \n
 	}
 	append help "\nOPTIONS\n"
