@@ -72,9 +72,14 @@ set total [llength $chapters]
 set orig_pwd [pwd]
 set serie_title [dict get [lindex $chapters 0] mangaTitle]
 
+set group_dict [dict create]
+foreach group $groups {
+	dict set group_dict [dict get $group id] [dict get $group name]
+}
+
 foreach ch [lreverse $chapters] {
 	set ch_group_names \
-		[lmap ch_gid [dict get $ch groups] {dict get $groups $ch_gid}]
+		[lmap ch_gid [dict get $ch groups] {dict get $group_dict $ch_gid}]
 	set ch_caption [chapter_caption $serie_title $ch $ch_group_names]
 	set outdir [file normalize [path_sanitize $ch_caption]]
 	if {[file exists $outdir]} {

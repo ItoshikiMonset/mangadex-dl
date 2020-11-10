@@ -174,11 +174,17 @@ foreach entry $catalog {
 	set chapters [lfilter ch $chapters \
 					  {[dict get $ch timestamp] > $local_tstamp}]
 
+	# Convert group array of dicts to id: name dict
+	set group_dict [dict create]
+	foreach group $groups {
+		dict set group_dict [dict get $group id] [dict get $group name]
+	}
+
 	# Loop over every new chapter, append to feed and download if autodl is set
 	# and group matches at least one group_name
 	foreach ch $chapters {
 		set ch_group_names \
-			[lmap ch_gid [dict get $ch groups] {dict get $groups $ch_gid}]
+			[lmap ch_gid [dict get $ch groups] {dict get $group_dict $ch_gid}]
 		set ch_caption [chapter_caption $serie_title $ch $ch_group_names]
 		if {$autodl && ($group_filter eq "" || $group_filter in $ch_group_names)} {
 			set outdir [file normalize \
