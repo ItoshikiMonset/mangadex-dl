@@ -52,13 +52,13 @@ autocli usage opts \
 						                  "Defaults to the same directory as CATALOG."}
 		single-feed {flag                 "Use a single feed instead of one per serie."}
 	}
-dict assign $opts
 
 if {$argc < 1} {
 	die $usage
 }
 shift catalog_path
 
+dict assign $opts
 if {$proxy ne ""} {
 	set ::env(http_proxy)  $proxy
 	set ::env(https_proxy) $proxy

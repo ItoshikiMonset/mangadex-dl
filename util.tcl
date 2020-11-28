@@ -1,4 +1,5 @@
 namespace path {::tcl::mathop ::tcl::mathfunc}
+namespace eval ::tcl::dict namespace path {{::tcl::mathop ::tcl::mathfunc}}
 
 # Identity function
 proc id {x} {set x}
@@ -105,9 +106,49 @@ proc ::tcl::dict::get? {dict _var args} {
 	}
 	return 0
 }
+
+# dict append with support for nested dictionaries while appending
+# only one element
+proc ::tcl::dict::appendn {dict args} {
+    upvar 1 $dict d
+    ::set keys [::lrange $args 0 end-1]
+    ::set appdarg [::lindex $args end]
+    try {
+        set d {*}$keys [list {*}[get $d {*}$keys] $appdarg]
+    } on error {} {
+        set d {*}$keys [list $appdarg]
+    }
+}
+
+# dict incr with support for nested dictionaries that only incr by 1
+proc ::tcl::dict::incrn {dict args} {
+    upvar 1 $dict d
+    try {
+        set d {*}$args [+ [get $d {*}$args] 1]
+    } on error {} {
+        set d {*}$args 1
+    }
+}
+
+# like dict::incrn but with a specified increment instead of 1
+proc ::tcl::dict::add {dict args} {
+    upvar 1 $dict d
+    ::set keys [::lrange $args 0 end-1]
+    ::set addarg [::lindex $args end]
+    try {
+        set d {*}$keys [+ [get $d {*}$keys] $addarg]
+    } on error {} {
+        set d {*}$keys $addarg
+    }
+}
+
 namespace ensemble configure dict -map \
-    [linsert [namespace ensemble configure dict -map] end \
-		 get? ::tcl::dict::get? assign ::tcl::dict::assign]
+	[dict merge [namespace ensemble configure dict -map] \
+		 {add     ::tcl::dict::add} \
+		 {appendn ::tcl::dict::appendn} \
+		 {assign  ::tcl::dict::assign} \
+		 {get?    ::tcl::dict::get?} \
+		 {incrn   ::tcl::dict::incrn}]
 
 # All-in-one CLI creation. Sets a pretty help notice and parses argv according
 # to flag/parametric options of the form "-opt ?param?".
