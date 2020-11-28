@@ -11,6 +11,10 @@ if {![executable_check curl]} {
 }
 
 
+proc remove_comments str {
+	regsub -all {#[^\n]*\n} $str {}
+}
+
 proc tstamp_sort {c1 c2} {
 	- [dict get $c1 timestamp] [dict get $c2 timestamp]
 }
@@ -24,20 +28,21 @@ autocli usage opts \
 	{
 		"Read series to monitor from CATALOG, a file containing a Tcl list"
 		"using the following syntax:"
-		"    {serie_url ?option value? ...} ..."
+		"    {SERIE_URL ?OPTION VALUE? ...} ..."
+		"Everything between a # and a newline is ignored."
 		""
-		"with the following options available:"
+		"with the following OPTIONs available:"
 		"    autodl"
-		"        If value is 1, new chapters for this serie are downloaded to "
+		"        If VALUE is 1, new chapters for this serie are downloaded to "
 		"        the directory specified via the -autodl-dir option. If the"
 		"        -autodl option is set, using a value of 0 disables it."
 		""
 		"    group"
-		"        Only download chapters having the value matching one of their"
+		"        Only download chapters having VALUE matching one of their"
 		"        group names."
 		""
 		"    title"
-		"        Use this title instead of the Mangadex provided one."
+		"        Use VALUE as title instead of the Mangadex provided one."
 		""
 		"For each serie, an Atom feed is created next to the given CATALOG"
 		"file and updated for each new chapter."
@@ -67,8 +72,7 @@ set autodl_default $autodl
 unset autodl
 
 
-# Various path setting and init file reading
-set catalog [read_file $catalog_path]
+set catalog [remove_comments [read_file $catalog_path]]
 if {![string is list $catalog]} {
 	die "$catalog_path: does not contain a Tcl list"
 }
