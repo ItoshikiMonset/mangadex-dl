@@ -78,6 +78,7 @@ proc chapter_dl {chapter_id} {
 			set urls [lprefix $pages $serverFallback$hash/]
 			curl_map $urls $outnames --continue-at -
 		} else {
+			puts stderr "No server fallback!"
 			dict incr errdict -level
 			return -options $errdict $err
 		}

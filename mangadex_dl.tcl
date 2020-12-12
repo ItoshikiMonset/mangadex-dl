@@ -45,17 +45,17 @@ if {![regexp {https://(?:www\.)?mangadex\.org/title/(\d+)/[^/]+} $serie_url -> s
 puts "Downloading serie JSON ($serie_url)..."
 if {[catch {api_dl manga $serie_id chapters} json]} {
 	puts stderr "Failed to download serie JSON!\n\n$json"
-	continue
+	exit 1
 }
 if {[catch {json::json2dict $json} root]} {
 	puts stderr "Invalid serie JSON or curl uncatched error!\n\n$root"
-	continue
+	exit 1
 }
 dict assign $root
 dict assign $data
 if {$code != 200} {
 	puts stderr "Code $code (status: $status) received"
-	continue
+	exit 1
 }
 
 # Filter chapters by language then number arguments if required
@@ -106,13 +106,13 @@ if {$covers} {
 	}
 	if {[catch {json::json2dict $json} root]} {
 		puts stderr "Invalid serie JSON or curl uncatched error!\n\n$root"
-		continue
+		exit 1
 	}
 	dict assign $root
 
 	if {$code != 200} {
 		puts stderr "Code $code (status: $status) received"
-		continue
+		exit 1
 	}
 
 	if {[llength $data] == 0} {
