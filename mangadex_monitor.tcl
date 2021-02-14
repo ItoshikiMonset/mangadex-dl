@@ -195,12 +195,14 @@ foreach entry $catalog {
 							[file join $autodl_dir [path_sanitize $ch_caption]]]
 			file mkdir $outdir
 			cd $outdir
+			set chapter_id [dict get $ch id]
+			set link $URL_BASE/chapter/$chapter_id
 			puts "Downloading $ch_caption..."
-			if {[catch {chapter_dl [dict get $ch id]} err]} {
-				atom add_entry feed "$ch_caption" "Failed download!\n\n$err"
+			if {[catch {chapter_dl $chapter_id} err]} {
+				atom add_entry feed "(Fail) $ch_caption" "Download failure" $link
 				file delete -force -- $outdir
 			} else {
-				atom add_entry feed "$ch_caption" "Downloaded to $outdir"
+				atom add_entry feed "$ch_caption" "Downloaded to $outdir" $link
 			}
 			cd $orig_pwd
 		} else {
