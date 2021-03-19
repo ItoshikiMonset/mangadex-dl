@@ -3,8 +3,9 @@ set scriptdir [file dirname [file dirname \
 							 [file normalize [file join [info script] dummy]]]]
 source [file join $scriptdir util.tcl]
 
-set URL_BASE https://mangadex.org
-set USER_AGENT {Mozilla/5.0 (Windows NT 6.1; WOW64; rv:54.0) Gecko/20100101 Firefox/54.0}
+set URL_BASE     https://mangadex.org
+set API_URL_BASE https://api.mangadex.org/v2/
+set USER_AGENT   {Mozilla/5.0 (Windows NT 6.1; WOW64; rv:54.0) Gecko/20100101 Firefox/54.0}
 
 
 # Produce a daiz approved name for a chapter
@@ -51,8 +52,8 @@ proc curl_map {urls outnames args} {
 
 # Trivial mangadex api download wrapper
 proc api_dl args {
-	global URL_BASE
-	curl --no-progress-meter $URL_BASE/api/v2/[join $args /]
+	global API_URL_BASE
+	curl --no-progress-meter $API_URL_BASE/[join $args /]
 }
 
 # Download the pages of a chapters starting at page $first and ending at page
