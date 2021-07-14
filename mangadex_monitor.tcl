@@ -1,69 +1,63 @@
 #!/usr/bin/env tclsh
-# TODO: download all series with one curl invocation (so we get pipelining) and use ::json::many-json2dict
+# TODO: check when chapter is last (how?) and put it in Atom
 set scriptdir [file dirname [file dirname \
-							 [file normalize [file join [info script] dummy]]]]
+								 [file normalize [file join [info script] dummy]]]]
 source [file join $scriptdir util.tcl]
 source [file join $scriptdir mangadex_util.tcl]
 source [file join $scriptdir atom.tcl]
-
-if {![executable_check curl]} {
-	die "curl executable not found"
-}
+util::exec_require curl
 
 
-proc remove_comments str {
-	regsub -all {#[^\n]*\n} $str {}
-}
+proc remove_comments str {regsub -all {#[^\n]*\n} $str {}}
 
-proc tstamp_sort {c1 c2} {
-	- [dict get $c1 timestamp] [dict get $c2 timestamp]
-}
+proc tstamp_compare {c1 c2} {- [get_chapter_tstamp $c1] [get_chapter_tstamp $c2]}
 
 
 # Option and argument handling
-autocli usage opts \
-	[file tail [info script]] \
-	"monitor Mangadex series" \
-	"\[OPTIONS\] CATALOG" \
+set optres [util::autocli \
 	{
-		"Read series to monitor from CATALOG, a file containing a Tcl list"
-		"using the following syntax:"
-		"    {SERIE_URL ?OPTION VALUE? ...} ..."
-		"Everything between a # and a newline is ignored."
-		""
-		"with the following OPTIONs available:"
-		"    autodl"
-		"        If VALUE is 1, new chapters for this serie are downloaded to "
-		"        the directory specified via the -autodl-dir option. If the"
-		"        -autodl option is set, using a value of 0 disables it."
-		""
-		"    group"
-		"        Only download chapters having VALUE matching one of their"
-		"        group names."
-		""
-		"    title"
-		"        Use VALUE as title instead of the Mangadex provided one."
-		""
-		"For each serie, an Atom feed is created next to the given CATALOG"
-		"file and updated for each new chapter."
-		"A database holding the last timestamp for each catalog entry is also"
-		"created at the same place."
+		proxy       {param "" PROXY_URL {Set the curl HTTP/HTTPS proxy.}}
+		lang        {param en LANG_CODE {Only monitor chapters in this language.}}
+		autodl      {flag               {Set the "autodl" option for every manga.}}
+		autodl-dir  {param "" DIRECTORY {Where to auto download new chapters.} \
+						                {Defaults to the same directory as CATALOG.}}
+		single-feed {flag               {Use a single feed instead of one per manga.}}
 	} \
+	[file tail [info script]] \
+	{monitor MangaDex mangas} \
+	CATALOG \
 	{
-		proxy       {param ""   PROXY_URL "Set the curl HTTP/HTTPS proxy."}
-		lang        {param "gb" LANG_CODE "Only monitor chapters in this language."}
-		autodl      {flag                 "Set the \"autodl\" option for every serie."}
-		autodl-dir  {param ""   DIRECTORY "Where to auto download new chapters." \
-						                  "Defaults to the same directory as CATALOG."}
-		single-feed {flag                 "Use a single feed instead of one per serie."}
-	}
+		{Read mangas to monitor from CATALOG, a file containing a Tcl list using the following
+		 syntax:}
+		{    {MANGA_URL ?OPTION VALUE? ...} ...}
+		{    # Comment}
+		{}
+		{with the following OPTIONs available:}
+		{    autodl}
+		{        If VALUE is 1, new chapters for this manga are downloaded to the directory
+			     specified via the -autodl-dir option. If the -autodl option is set, using a value
+			     of 0 disables it.}
+		{}
+		{    group}
+		{        Only download chapters having VALUE matching one of their group names.}
+		{}
+		{    title}
+		{        Use VALUE as title instead of the MangaDex provided one.}
+		{}
+		{For each manga, an Atom feed is created next to the given CATALOG file and updated for each
+		 new chapter.}
+		{}
+		{A database holding the last timestamp for each catalog entry is also created at the same
+		 place.}
+	}]
+
 
 if {$argc < 1} {
-	die $usage
+	util::die [util::usage]
 }
-shift catalog_path
+util::shift catalog_path
 
-dict assign $opts
+dict assign $optres
 if {$proxy ne ""} {
 	set ::env(http_proxy)  $proxy
 	set ::env(https_proxy) $proxy
@@ -72,39 +66,46 @@ set autodl_default $autodl
 unset autodl
 
 
-set catalog [remove_comments [read_file $catalog_path]]
+set catalog [remove_comments [util::read_wrap $catalog_path]]
 if {![string is list $catalog]} {
-	die "$catalog_path: does not contain a Tcl list"
+	util::die "$catalog_path: does not contain a Tcl list"
 }
 
 set datadir_path [file normalize [file dirname $catalog_path]]
 
 set tstampdb_path [file join $datadir_path timestamps.tcldict]
 if {[file exists $tstampdb_path]} {
-	set tstampdb [read_file $tstampdb_path]
-	if {![string is list $tstampdb] || [llength $tstampdb] % 2} {
-		die "$tstampdb_path: does not contain a Tcl dict"
+	set tstampdb [util::read_wrap $tstampdb_path]
+	if {![util::is_dict $tstampdb]} {
+		util::die "$tstampdb_path: does not contain a Tcl dict"
 	}
 } else {
 	set tstampdb [dict create]
 }
+util::atexit add {
+	global tstampdb_path tstampdb
+	util::write_wrap $tstampdb_path $tstampdb
+}
 
 if {$single_feed} {
 	set feed_path [file join $datadir_path mangadex.xml]
-	set feed [atom read_or_create $feed_path "new Mangadex chapters"]
+	set feed [atom read_or_create $feed_path "new MangaDex chapters"]
+	util::atexit add {
+		global feed
+		atom write $feed
+	}
 }
 
 if {$autodl_dir eq ""} {
 	set autodl_dir $datadir_path
 } elseif {![file isdirectory $autodl_dir]} {
-	die "$autodl_dir: directory not found"
+	util::die "$autodl_dir: directory not found"
 } elseif {![file writeable $autodl_dir] || ![file executable $autodl_dir]} {
-	die "$autodl_dir: permission to access or write denied"
+	util::die "$autodl_dir: permission to access or write denied"
 }
 
 
 # Loop over the catalog entries
-set orig_pwd [pwd]
 set epoch [clock seconds]
 foreach entry $catalog {
 	if {![string is list $entry] || [llength $entry] == 0} {
@@ -112,108 +113,76 @@ foreach entry $catalog {
 		continue
 	}
 
-	# Download serie JSON
-	set entry [lassign $entry serie_url]
-	if {![regexp {https://(?:www\.)?mangadex\.org/title/(\d+)/[^/]+} $serie_url -> serie_id]} {
-		puts stderr "$serie_url: invalid mangadex URL"
-		continue
-	}
-	puts "Downloading serie JSON ($serie_url)..."
-	if {[catch {api_dl manga $serie_id chapters} json]} {
-		puts stderr "Failed to download serie JSON!\n\n$json"
-		continue
-	}
-	if {[catch {json::json2dict $json} root]} {
-		puts stderr "Invalid serie JSON or curl uncatched error!\n\n$root"
-		continue
-	}
-	dict assign $root
-	dict assign $data
-	if {$code != 200} {
-		puts stderr "Code $code (status: $status) received"
+	# Download manga JSON
+	util::lshift entry manga_id
+	if {$tcl_platform(platform) eq "unix" && [chan isatty stderr]} {puts -nonewline stderr \x1b\[1m}
+	puts stderr "\[[incr entry_count]/[llength $catalog]\] Processing manga $manga_id..."
+	if {$tcl_platform(platform) eq "unix" && [chan isatty stderr]} {puts -nonewline stderr \x1b\[22m}
+
+	if {[catch {get_chapter_list $manga_id $lang} chapters]} {
+		puts stderr "Failed to download chapter list JSON!\n\n$chapters"
 		continue
 	}
 
 	# Parse the entry extra options
 	set autodl $autodl_default
 	set group_filter ""
-	set serie_title [dict get [lindex $chapters 0] mangaTitle]
+	set manga_title [get_rel_title [dict get [lindex $chapters 0] relationships] $lang]
 	if {[llength $entry] != 0} {
 		dict get? $entry autodl autodl
 		dict get? $entry group_filter group
-		dict get? $entry serie_title title
+		dict get? $entry manga_title title
 	}
 
-	# Read feed or create per serie feed
+	# Read feed or create per manga feed
 	if {!$single_feed} {
-		set feed_path [file join $datadir_path \
-						   [path_sanitize ${serie_title}_${serie_id}].xml]
-		set feed [atom read_or_create $feed_path \
-					  "$serie_title - new Mangadex chapters"]
+		set feed_path [file join $datadir_path [util::path_sanitize ${manga_title}_${manga_id}].xml]
+		set feed [atom read_or_create $feed_path "$manga_title - new MangaDex chapters"]
 	}
 
-	# Filter chapters by language
-	if {$lang ne ""} {
-		set chapters [lfilter ch $chapters {[dict get $ch language] eq $lang}]
-	}
-
-	# Ignore chapters not yet released
-	set chapters [lfilter ch $chapters {[dict get $ch timestamp] < $epoch}]
-	if {[llength $chapters] == 0} {
-		puts stderr "$serie_url: no chapter found"
-		continue
-	}
 	# Sort chapters by their timestamp (oldest first)
-	set chapters [lsort -command tstamp_sort $chapters]
+	set chapters [lsort -command tstamp_compare $chapters]
 
-	# Compare local with remote timestamp and filter chapters to only keep
-	# the new ones; if new chapters there are
-	set no_local_tstamp [catch {dict get $tstampdb $serie_id} local_tstamp]
-	set remote_tstamp [dict get [lindex $chapters end] timestamp]
-	dict set tstampdb $serie_id $remote_tstamp
+	# Compare local with remote timestamp
+	set no_local_tstamp [! [dict get? $tstampdb local_tstamp $manga_id]]
+	set remote_tstamp [get_chapter_tstamp [lindex $chapters end]]
+	dict set tstampdb $manga_id $remote_tstamp
 
 	if {$no_local_tstamp || $local_tstamp == $remote_tstamp} {
+		puts stderr "No new chapters"
+		after 1000; # Sleep to avoid hitting the rate limit: 5 req/s and 60 GET at-home/min
 		continue
 	}
-	set chapters [lfilter ch $chapters \
-					  {[dict get $ch timestamp] > $local_tstamp}]
-
-	# Convert group array of dicts to id: name dict
-	set group_dict [dict create]
-	foreach group $groups {
-		dict set group_dict [dict get $group id] [dict get $group name]
-	}
+	# Filter chapters to keep only the new ones
+	set chapters [util::lfilter ch $chapters {[get_chapter_tstamp $ch] > $local_tstamp}]
 
 	# Loop over every new chapter, append to feed and download if autodl is set
 	# and group matches at least one group_name
+	set ch_count 0
 	foreach ch $chapters {
-		set ch_group_names \
-			[lmap ch_gid [dict get $ch groups] {dict get $group_dict $ch_gid}]
-		set ch_caption [chapter_caption $serie_title $ch $ch_group_names]
-		if {$autodl && ($group_filter eq "" || $group_filter in $ch_group_names)} {
-			set outdir [file normalize \
-							[file join $autodl_dir [path_sanitize $ch_caption]]]
+		set ch_dirname [chapter_dirname $ch $lang]
+		set group_names [get_rel_groups [dict get $ch relationships]]
+		if {$autodl && ($group_filter eq "" || $group_filter in $group_names)} {
+			set outdir [file join $autodl_dir [util::path_sanitize $ch_dirname]]
+			if {[file exists $outdir] && ![util::is_dir_empty $outdir]} {
+				puts stderr "$outdir: directory exists and isn't empty"
+				continue
+			}
 			file mkdir $outdir
-			cd $outdir
-			set chapter_id [dict get $ch id]
-			set link $URL_BASE/chapter/$chapter_id
-			puts "Downloading $ch_caption..."
-			if {[catch {chapter_dl $chapter_id} err]} {
-				atom add_entry feed "(Fail) $ch_caption" "Download failure" $link
+			set atom_link $URL_BASE/chapter/[dict get $ch data id]
+			puts stderr "\[[incr ch_count]/[llength $chapters]\] Downloading $outdir..."
+			if {[catch {dl_chapter $ch $outdir} err]} {
+				puts stderr "Failed to download $outdir!\n\n$err"
+				atom add_entry feed "(Fail) $ch_dirname" content "Download failure" link $atom_link
 				file delete -force -- $outdir
 			} else {
-				atom add_entry feed "$ch_caption" "Downloaded to $outdir" $link
+				atom add_entry feed "$ch_dirname" content "Downloaded to $outdir" link $atom_link
 			}
-			cd $orig_pwd
 		} else {
-			atom add_entry feed "$ch_caption"
+			atom add_entry feed "$ch_dirname"
 		}
 	}
 	if {!$single_feed} {
 		atom write $feed
 	}
 }
-if {$single_feed} {
-	atom write $feed
-}
-write_file $tstampdb_path $tstampdb

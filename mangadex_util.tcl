@@ -3,28 +3,12 @@ set scriptdir [file dirname [file dirname \
 							 [file normalize [file join [info script] dummy]]]]
 source [file join $scriptdir util.tcl]
 
-set URL_BASE     https://mangadex.org
-set API_URL_BASE https://api.mangadex.org/v2/
-set USER_AGENT   {Mozilla/5.0 (Windows NT 6.1; WOW64; rv:54.0) Gecko/20100101 Firefox/54.0}
+set URL_BASE       https://mangadex.org
+set URL_BASE_RE    https://mangadex\.org
+set COVER_SERVER   https://uploads.mangadex.org
+set API_URL_BASE   https://api.mangadex.org
+set USER_AGENT     {Mozilla/5.0 (Windows NT 6.1; WOW64; rv:54.0) Gecko/20100101 Firefox/54.0}
 
-
-# Produce a daiz approved name for a chapter
-proc chapter_caption {serie_title chapter_data group_names} {
-	dict assign $chapter_data
-	set ret "$serie_title - c"
-
-	if {[string is entier -strict $chapter]} {
-		append ret [format %03d $chapter]
-	} elseif {[string is double -strict $chapter]} {
-		append ret [format %05.1f $chapter]
-	} else {
-		append ret $chapter
-	}
-	if {$volume ne ""} {
-		append ret " ([format v%02d $volume])"
-	}
-	append ret " \[[join $group_names {, }]\]"
-}
 
 # Wrapper to set common curl options
 proc curl {args} {
@@ -41,8 +25,8 @@ proc curl {args} {
 		{*}$args
 }
 
-# Wrapper around curl to download each url to the corresponding outname
-# args is used as additional arguments
+# Wrapper around curl to download each URL to the corresponding outname
+# args can be used as additional curl options
 proc curl_map {urls outnames args} {
 	foreach url $urls outname $outnames {
 		lappend args -o $outname $url
@@ -50,38 +34,173 @@ proc curl_map {urls outnames args} {
 	curl {*}$args
 }
 
-# Trivial mangadex api download wrapper
-proc api_dl args {
+# MangaDex GET API endpoint, with optional query parameters as a dict
+proc api_get {endpoint {query_params ""}} {
 	global API_URL_BASE
-	curl --no-progress-meter $API_URL_BASE/[join $args /]
+
+	set args {}
+	foreach {key val} $query_params {
+		lappend args --data-urlencode $key=$val
+	}
+	curl --get --no-progress-meter $API_URL_BASE/$endpoint {*}$args
 }
 
-# Download the pages of a chapters starting at page $first and ending at page
-# $last in the CWD
-proc chapter_dl {chapter_id} {
-	set json [json::json2dict [api_dl chapter $chapter_id]]
+# MangaDex JSON POST API endpoint
+proc api_post_json {endpoint json} {
+	global API_URL_BASE
 
-	set code [dict get $json code]
-	if {$code != 200} {
-		error "Code $code (status [dict get $json status]) received"
-	}
+	curl --request POST --header {Content-Type: application/json} --data $json --no-progress-meter \
+		$API_URL_BASE/$endpoint
+}
 
-	dict assign [dict get $json data]
+# Convert a Mangadex manga URL to its ID; mode can be "legacy"
+proc manga_url_to_id {url {mode ""}} {
+	global URL_BASE_RE
 
-	set urls [lprefix $pages $server$hash/]
-	set outnames [lmap num [lseq_zerofmt 1 [llength $pages]] page $pages {
-		string cat $num [file extension $page]
-	}]
-
-	if {[catch {curl_map $urls $outnames} err errdict]} {
-		if {[info exists serverFallback]} {
-			puts stderr "Trying fallback server"
-			set urls [lprefix $pages $serverFallback$hash/]
-			curl_map $urls $outnames --continue-at -
-		} else {
-			puts stderr "No server fallback!"
-			dict incr errdict -level
-			return -options $errdict $err
+	if {$mode eq "legacy"} {
+		if {![regexp "^$URL_BASE_RE/title/(\\d+)/\[^/\]+\$" $url -> id]} {
+			util::die "$url: invalid legacy URL"
+		}
+	} else {
+		set uuid_re {[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}}
+		if {![regexp "^$URL_BASE_RE/title/($uuid_re)\$" $url -> id]} {
+			util::die "$url: invalid URL"
 		}
 	}
+	return $id
+}
+
+# Helper to get manga title from a relationships list
+proc get_rel_title {relationships lang} {
+	foreach rel $relationships {
+		if {[dict get $rel type] ne "manga"} {
+			continue
+		}
+		if {$lang ne "" && [dict exists $rel attributes title $lang]} {
+			return [dict get $rel attributes title $lang]
+		} else {
+			return [dict get $rel id]
+		}
+	}
+}
+
+# Helper to get scanlation group names from a relationships list
+# return {{No Group}} if no group was found
+proc get_rel_groups {relationships} {
+	set groups [lmap rel $relationships {
+		if {[dict get $rel type] ne "scanlation_group"} {
+			continue
+		}
+		dict get $rel attributes name
+	}]
+	? {$groups eq ""} {{No Group}} {$groups}
+}
+
+# Get chapter timestamp (using the publishAt field) in `clock seconds` format
+proc get_chapter_tstamp {chapter_data} {
+	clock scan [regsub {\+\d{2}:\d{2}$} [dict get $chapter_data data attributes publishAt] {}] \
+		-timezone :UTC -format %Y-%m-%dT%H:%M:%S
+}
+
+# Produce a pretty chapter dirname
+proc chapter_dirname {chapter_data lang} {
+	set title [get_rel_title [dict get $chapter_data relationships] $lang]
+	set ret "$title - c"
+	set num [dict get $chapter_data data attributes chapter]
+	if {[string is entier -strict $num]} {
+		append ret [format %03d $num]
+	} elseif {[string is double -strict $num]} {
+		append ret [format %05.1f $num]
+	} else {
+		append ret $num
+	}
+	set vol [dict get $chapter_data data attributes volume]
+	if {$vol ne "null"} {
+		append ret " ([format v%02d $vol])"
+	}
+	set group_names [get_rel_groups [dict get $chapter_data relationships]]
+	append ret " \[[join $group_names {, }]\]"
+}
+
+# Produce a pretty cover filename
+proc cover_filename {cover_data lang} {
+	set title [get_rel_title [dict get $cover_data relationships] $lang]
+	set ret "$title - c000"
+	set vol [dict get $cover_data data attributes volume]
+	if {$vol ne "null"} {
+		append ret " ([format v%02d $vol])"
+	}
+	set ext [file extension [dict get $cover_data data attributes fileName]]
+	append ret " - Cover$ext"
+}
+
+# Get the complete chapter list (from smallest to greatest chapter number) for a manga id
+# with an optional language filter
+proc get_chapter_list {mid lang} {
+	set query_params {
+		limit          500
+		offset         0
+		order[chapter] asc
+		includes[]     scanlation_group
+		includes[]     manga
+	}
+	if {$lang ne ""} {
+		lappend query_params {translatedLanguage[]} $lang
+	}
+	puts stderr "Downloading manga feed JSON..."
+	util::do {
+		set manga_feed [json::json2dict [api_get manga/$mid/feed $query_params]]
+		dict incr query_params offset 500
+		# Filter invalid chapters
+		lappend chapters {*}[util::lfilter ch [dict get $manga_feed results] {
+			[dict get $ch result] eq "ok"
+		}]
+	} while {[dict get $manga_feed total] - [dict get $query_params offset] > 0}
+	return $chapters
+}
+
+
+# Download the pages of a chapters in dirname from its JSON dict
+proc dl_chapter {chapter_data dirname} {
+	puts stderr "Downloading @Home server URL JSON..."
+	set json [api_get at-home/server/[dict get $chapter_data data id]]
+	set server [dict get [json::json2dict $json] baseUrl]
+
+	set hash [dict get $chapter_data data attributes hash]
+	set pages [dict get $chapter_data data attributes data]
+
+	set urls [util::lprefix $pages $server/data/$hash/]
+	set outnames [lmap num [util::iota [llength $pages] 1] page $pages {
+		format %0*d%s [string length [llength $pages]] $num [file extension $page]
+	}]
+	curl_map $urls [util::lprefix $outnames $dirname/]
+}
+
+# Download the covers of a manga in cwd. If volumes is specified, download
+# only the covers for these
+proc dl_covers {mid lang {volumes ""}} {
+	global COVER_SERVER
+
+	set query_params {
+		limit         100
+		offset        0
+		order[volume] asc
+		includes[]    manga
+	}
+	lappend query_params {manga[]} $mid
+
+	puts stderr "Downloading cover list JSON..."
+	if {[catch {api_get cover $query_params} json]} {
+		util::die "Failed to download cover list JSON!\n\n$json"
+	}
+	set covers [dict get [json::json2dict $json] results]
+	foreach cov $covers {
+		if {[dict get $cov result] eq "ok" &&
+			($volumes eq "" || [dict get $cov data attributes volume] in $volumes)
+		} {
+			lappend urls $COVER_SERVER/covers/$mid/[dict get $cov data attributes fileName]
+			lappend outnames [cover_filename $cov $lang]
+		}
+	}
+	curl_map $urls $outnames
 }

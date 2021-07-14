@@ -1,115 +1,140 @@
-                        Mangadex tools
+                        MangaDex tools
                         ==============
 
         Overview
         --------
 
-Some useful tools to interface with Mangadex via its JSON API:
+Some useful tools to interface with MangaDex via its JSON API:
 
 * mangadex_dl.tcl
 +-------------------------------------------------------------------------+
 | NAME                                                                    |
-|     mangadex_dl.tcl - download Mangadex chapters                        |
+|     mangadex_dl.tcl - download MangaDex chapters                        |
 |                                                                         |
 | SYNOPSIS                                                                |
-|     mangadex_dl.tcl [OPTIONS] SERIE_URL [CHAPTER...]                    |
+|     mangadex_dl.tcl [OPTION]... MANGA_URL [CHAPTER...]                  |
 |                                                                         |
 | DESCRIPTION                                                             |
 |     Download each of the specified chapters into its own properly named |
-|     directory. If no chapter is specified, download all of them.        |
+|     directory.                                                          |
+|     If no chapter is specified, download all of them.                   |
 |                                                                         |
 | OPTIONS                                                                 |
-|     -help                                                               |
-|         Print this help message and exit.                               |
-|                                                                         |
 |     -proxy PROXY_URL                                                    |
 |         Set the curl HTTP/HTTPS proxy.                                  |
 |                                                                         |
 |     -lang LANG_CODE                                                     |
 |         Only download chapters in this language.                        |
-|         Defaults to "gb".                                               |
+|         Defaults to "en".                                               |
 |                                                                         |
 |     -covers                                                             |
-|         Download the serie covers too.                                  |
+|         Download the manga covers too.                                  |
+|                                                                         |
+|     -help                                                               |
+|         Print this help message and exit.                               |
 |                                                                         |
 +-------------------------------------------------------------------------+
 
 * mangadex_monitor.tcl
-+---------------------------------------------------------------------------+
-| NAME                                                                      |
-|     mangadex_monitor.tcl - monitor Mangadex series                        |
-|                                                                           |
-| SYNOPSIS                                                                  |
-|     mangadex_monitor.tcl [OPTIONS] CATALOG                                |
-|                                                                           |
-| DESCRIPTION                                                               |
-|     Read series to monitor from CATALOG, a file containing a Tcl list     |
-|     using the following syntax:                                           |
-|         {SERIE_URL ?OPTION VALUE? ...} ...                                |
-|     Everything between a # and a newline is ignored.                      |
-|                                                                           |
-|     with the following OPTIONs available:                                 |
-|         autodl                                                            |
-|             If VALUE is 1, new chapters for this serie are downloaded to  |
-|             the directory specified via the -autodl-dir option. If the    |
-|             -autodl option is set, using a value of 0 disables it.        |
-|                                                                           |
-|         group                                                             |
-|             Only download chapters having VALUE matching one of their     |
-|             group names.                                                  |
-|                                                                           |
-|         title                                                             |
-|             Use VALUE as title instead of the Mangadex provided one.      |
-|                                                                           |
-|     For each serie, an Atom feed is created next to the given CATALOG     |
-|     file and updated for each new chapter.                                |
-|     A database holding the last timestamp for each catalog entry is also  |
-|     created at the same place.                                            |
-|                                                                           |
-| OPTIONS                                                                   |
-|     -help                                                                 |
-|         Print this help message and exit.                                 |
-|                                                                           |
-|     -proxy PROXY_URL                                                      |
-|         Set the curl HTTP/HTTPS proxy.                                    |
-|                                                                           |
-|     -lang LANG_CODE                                                       |
-|         Only monitor chapters in this language.                           |
-|         Defaults to "gb".                                                 |
-|                                                                           |
-|     -autodl                                                               |
-|         Set the "autodl" option for every serie.                          |
-|                                                                           |
-|     -autodl-dir DIRECTORY                                                 |
-|         Where to auto download new chapters.                              |
-|         Defaults to the same directory as CATALOG.                        |
-|                                                                           |
-|     -single-feed                                                          |
-|         Use a single feed instead of one per serie.                       |
-|                                                                           |
-+---------------------------------------------------------------------------+
++----------------------------------------------------------------------------------+
+| NAME                                                                             |
+|     mangadex_monitor.tcl - monitor MangaDex mangas                               |
+|                                                                                  |
+| SYNOPSIS                                                                         |
+|     mangadex_monitor.tcl [OPTION]... CATALOG                                     |
+|                                                                                  |
+| DESCRIPTION                                                                      |
+|     Read mangas to monitor from CATALOG, a file containing a Tcl list using the  |
+|     following syntax:                                                            |
+|           {MANGA_URL ?OPTION VALUE? ...} ...                                     |
+|           # Comment                                                              |
+|                                                                                  |
+|     with the following OPTIONs available:                                        |
+|           autodl                                                                 |
+|               If VALUE is 1, new chapters for this manga are downloaded to the   |
+|               directory specified via the -autodl-dir option. If the -autodl     |
+|               option is set, using a value of 0 disables it.                     |
+|                                                                                  |
+|           group                                                                  |
+|               Only download chapters having VALUE matching one of their group    |
+|               names.                                                             |
+|                                                                                  |
+|           title                                                                  |
+|               Use VALUE as title instead of the MangaDex provided one.           |
+|                                                                                  |
+|     For each manga, an Atom feed is created next to the given CATALOG file and   |
+|     updated for each new chapter.                                                |
+|                                                                                  |
+|     A database holding the last timestamp for each catalog entry is also created |
+|     at the same place.                                                           |
+|                                                                                  |
+| OPTIONS                                                                          |
+|     -proxy PROXY_URL                                                             |
+|         Set the curl HTTP/HTTPS proxy.                                           |
+|                                                                                  |
+|     -lang LANG_CODE                                                              |
+|         Only monitor chapters in this language.                                  |
+|         Defaults to "en".                                                        |
+|                                                                                  |
+|     -autodl                                                                      |
+|         Set the "autodl" option for every manga.                                 |
+|                                                                                  |
+|     -autodl-dir DIRECTORY                                                        |
+|         Where to auto download new chapters.                                     |
+|         Defaults to the same directory as CATALOG.                               |
+|                                                                                  |
+|     -single-feed                                                                 |
+|         Use a single feed instead of one per manga.                              |
+|                                                                                  |
+|     -help                                                                        |
+|         Print this help message and exit.                                        |
+|                                                                                  |
++----------------------------------------------------------------------------------+
+
+* mangadex_convert_catalog.tcl
++---------------------------------------------------------------------------------+
+| NAME                                                                            |
+|     mangadex_convert_catalog.tcl - update monitor config files for new MangaDex |
+|     API                                                                         |
+|                                                                                 |
+| SYNOPSIS                                                                        |
+|     mangadex_convert_catalog.tcl [OPTION]... CATALOG_PATH                       |
+|                                                                                 |
+| DESCRIPTION                                                                     |
+|     Convert the catalog found at CATALOG_PATH along with its corresponding      |
+|     timestamp database to work with the new MangaDex API.                       |
+|     Before that, the old versions are backuped to .old suffixed files.          |
+|                                                                                 |
+| OPTIONS                                                                         |
+|     -proxy PROXY_URL                                                            |
+|         Set the curl HTTP/HTTPS proxy.                                          |
+|                                                                                 |
+|     -help                                                                       |
+|         Print this help message and exit.                                       |
+|                                                                                 |
++---------------------------------------------------------------------------------+
 
 
         Examples
         --------
 
 Download all the english chapters of Grappler Baki:
-    $ mangadex_dl.tcl https://mangadex.org/title/2434/grappler-baki
+    $ mangadex_dl.tcl https://mangadex.org/title/ea3122bb-0c28-4669-8686-d6df1274512f
 
 Idem but only the chapters 11 and 12, using a proxy:
-    $ mangadex_dl.tcl -proxy socks5h://localhost:9050 https://mangadex.org/title/2434/grappler-baki 11 12
+    $ mangadex_dl.tcl -proxy socks5h://localhost:9050 https://mangadex.org/title/ea3122bb-0c28-4669-8686-d6df1274512f 11 12
 
 Monitoring example:
     $ ls
     catalog.tcllist
     $ cat catalog.tcllist
-    {https://mangadex.org/title/2434/grappler-baki autodl 1 title "Baki the Grappler" group "TheSpinyBackTeam"}
-    {https://mangadex.org/title/30907/baki-dou-2018 autodl 1}
+    {ea3122bb-0c28-4669-8686-d6df1274512f autodl 1 title "Baki the Grappler" group "TheSpinyBackTeam"}  # Grappler Baki
+    {5e9a2a3e-f992-4af4-a887-cd130460c9e5 autodl 1}  # Baki Dou (2018)
     $ mangadex_monitor.tcl -autodl-dir ~/Mangos/autodl catalog.tcllist
     ...
     $ ls
-    Baki Dou (2018)_30907.xml
-    Baki the Grappler_2434.xml
+    Baki Dou (2018)_ea3122bb-0c28-4669-8686-d6df1274512f.xml
+    Baki the Grappler_5e9a2a3e-f992-4af4-a887-cd130460c9e5.xml
     catalog.tcllist
     timestamps.tcldict
 
