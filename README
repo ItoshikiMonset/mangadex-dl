@@ -129,8 +129,8 @@ Monitoring example:
     catalog.tcllist
     $ cat catalog.tcllist
     {ea3122bb-0c28-4669-8686-d6df1274512f autodl 1 title "Baki the Grappler" group "TheSpinyBackTeam"}  # Grappler Baki
-    {5e9a2a3e-f992-4af4-a887-cd130460c9e5 autodl 1}  # Baki Dou (2018)
-    $ mangadex_monitor.tcl -autodl-dir ~/Mangos/autodl catalog.tcllist
+    5e9a2a3e-f992-4af4-a887-cd130460c9e5  # Baki Dou (2018)
+    $ mangadex_monitor.tcl -autodl -autodl-dir ~/Mangos/autodl catalog.tcllist
     ...
     $ ls
     Baki Dou (2018)_ea3122bb-0c28-4669-8686-d6df1274512f.xml

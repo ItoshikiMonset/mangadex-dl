@@ -29,7 +29,7 @@ set optres [util::autocli \
 	{
 		{Read mangas to monitor from CATALOG, a file containing a Tcl list using the following
 		 syntax:}
-		{    {MANGA_URL ?OPTION VALUE? ...} ...}
+		{    {MANGA_ID ?OPTION VALUE? ...} ...}
 		{    # Comment}
 		{}
 		{with the following OPTIONs available:}
