@@ -102,9 +102,11 @@ proc get_chapter_tstamp {chapter_data} {
 		-timezone :UTC -format %Y-%m-%dT%H:%M:%S
 }
 
-# Produce a pretty chapter dirname
-proc chapter_dirname {chapter_data lang} {
-	set title [get_rel_title [dict get $chapter_data relationships] $lang]
+# Produce a pretty chapter dirname, if title is specified, it overrides the remote one
+proc chapter_dirname {chapter_data lang {title ""}} {
+	if {$title eq ""} {
+		set title [get_rel_title [dict get $chapter_data relationships] $lang]
+	}
 	set ret "$title - c"
 	set num [dict get $chapter_data data attributes chapter]
 	if {[string is entier -strict $num]} {
@@ -122,9 +124,11 @@ proc chapter_dirname {chapter_data lang} {
 	append ret " \[[join $group_names {, }]\]"
 }
 
-# Produce a pretty cover filename
-proc cover_filename {cover_data lang} {
-	set title [get_rel_title [dict get $cover_data relationships] $lang]
+# Produce a pretty cover filename, if title is specified, it overrides the remote one
+proc cover_filename {cover_data lang {title ""}} {
+	if {$title eq ""} {
+		set title [get_rel_title [dict get $cover_data relationships] $lang]
+	}
 	set ret "$title - c000"
 	set vol [dict get $cover_data data attributes volume]
 	if {$vol ne "null"} {

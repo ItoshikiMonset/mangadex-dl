@@ -160,7 +160,7 @@ foreach entry $catalog {
 	# and group matches at least one group_name
 	set ch_count 0
 	foreach ch $chapters {
-		set ch_dirname [chapter_dirname $ch $lang]
+		set ch_dirname [chapter_dirname $ch $lang $manga_title]
 		set group_names [get_rel_groups [dict get $ch relationships]]
 		if {$autodl && ($group_filter eq "" || $group_filter in $group_names)} {
 			set outdir [file join $autodl_dir [util::path_sanitize $ch_dirname]]
