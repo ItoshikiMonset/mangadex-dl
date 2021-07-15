@@ -24,10 +24,9 @@ set optres [util::autocli \
 		{Before that, the old versions are backuped to .old suffixed files.}
 	}]
 
-if {$argc != 1} {
+if {![util::shift catalog_path] || $argc != 0} {
 	util::die [util::usage]
 }
-util::shift catalog_path
 
 dict assign $optres
 if {$proxy ne ""} {

@@ -51,11 +51,9 @@ set optres [util::autocli \
 		 place.}
 	}]
 
-
-if {$argc < 1} {
+if {![util::shift catalog_path] || $argc != 0} {
 	util::die [util::usage]
 }
-util::shift catalog_path
 
 dict assign $optres
 if {$proxy ne ""} {
@@ -71,7 +69,7 @@ if {![string is list $catalog]} {
 	util::die "$catalog_path: does not contain a Tcl list"
 }
 
-set datadir_path [file normalize [file dirname $catalog_path]]
+set datadir_path [file dirname $catalog_path]
 
 set tstampdb_path [file join $datadir_path timestamps.tcldict]
 if {[file exists $tstampdb_path]} {

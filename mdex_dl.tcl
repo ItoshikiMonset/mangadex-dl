@@ -22,10 +22,9 @@ set optres [util::autocli \
 		{If no chapter is specified, download all of them.}
 	}]
 
-if {$argc < 1} {
+if {![util::shift manga_url]} {
 	util::die [util::usage]
 }
-util::shift manga_url
 
 dict assign $optres
 if {$proxy ne ""} {
