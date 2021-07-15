@@ -2,7 +2,6 @@ namespace path {::tcl::mathop ::tcl::mathfunc}
 
 namespace eval util {
 	source [file join [info library] init.tcl]
-	catch {package require Tclx}
 	namespace path {::tcl::mathop ::tcl::mathfunc}
 	namespace export *
 
