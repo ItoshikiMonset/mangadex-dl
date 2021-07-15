@@ -3,7 +3,7 @@
 set scriptdir [file dirname [file dirname \
 								 [file normalize [file join [info script] dummy]]]]
 source [file join $scriptdir util.tcl]
-source [file join $scriptdir mangadex_util.tcl]
+source [file join $scriptdir mdex_util.tcl]
 util::exec_require curl
 
 

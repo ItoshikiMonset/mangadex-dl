@@ -6,13 +6,13 @@
 
 Some useful tools to interface with MangaDex via its JSON API:
 
-* mangadex_dl.tcl
+* mdex_dl.tcl
 +-------------------------------------------------------------------------+
 | NAME                                                                    |
-|     mangadex_dl.tcl - download MangaDex chapters                        |
+|     mdex_dl.tcl - download MangaDex chapters                            |
 |                                                                         |
 | SYNOPSIS                                                                |
-|     mangadex_dl.tcl [OPTION]... MANGA_URL [CHAPTER...]                  |
+|     mdex_dl.tcl [OPTION]... MANGA_URL [CHAPTER...]                      |
 |                                                                         |
 | DESCRIPTION                                                             |
 |     Download each of the specified chapters into its own properly named |
@@ -35,18 +35,18 @@ Some useful tools to interface with MangaDex via its JSON API:
 |                                                                         |
 +-------------------------------------------------------------------------+
 
-* mangadex_monitor.tcl
+* mdex_monitor.tcl
 +----------------------------------------------------------------------------------+
 | NAME                                                                             |
-|     mangadex_monitor.tcl - monitor MangaDex mangas                               |
+|     mdex_monitor.tcl - monitor MangaDex mangas                                   |
 |                                                                                  |
 | SYNOPSIS                                                                         |
-|     mangadex_monitor.tcl [OPTION]... CATALOG                                     |
+|     mdex_monitor.tcl [OPTION]... CATALOG                                         |
 |                                                                                  |
 | DESCRIPTION                                                                      |
 |     Read mangas to monitor from CATALOG, a file containing a Tcl list using the  |
 |     following syntax:                                                            |
-|           {MANGA_URL ?OPTION VALUE? ...} ...                                     |
+|           {MANGA_ID ?OPTION VALUE? ...} ...                                      |
 |           # Comment                                                              |
 |                                                                                  |
 |     with the following OPTIONs available:                                        |
@@ -91,14 +91,13 @@ Some useful tools to interface with MangaDex via its JSON API:
 |                                                                                  |
 +----------------------------------------------------------------------------------+
 
-* mangadex_convert_catalog.tcl
+* mdex_convert_catalog.tcl
 +---------------------------------------------------------------------------------+
 | NAME                                                                            |
-|     mangadex_convert_catalog.tcl - update monitor config files for new MangaDex |
-|     API                                                                         |
+|     mdex_convert_catalog.tcl - update monitor config files for new MangaDex API |
 |                                                                                 |
 | SYNOPSIS                                                                        |
-|     mangadex_convert_catalog.tcl [OPTION]... CATALOG_PATH                       |
+|     mdex_convert_catalog.tcl [OPTION]... CATALOG_PATH                           |
 |                                                                                 |
 | DESCRIPTION                                                                     |
 |     Convert the catalog found at CATALOG_PATH along with its corresponding      |
@@ -119,10 +118,10 @@ Some useful tools to interface with MangaDex via its JSON API:
         --------
 
 Download all the english chapters of Grappler Baki:
-    $ mangadex_dl.tcl https://mangadex.org/title/ea3122bb-0c28-4669-8686-d6df1274512f
+    $ mdex_dl.tcl https://mangadex.org/title/ea3122bb-0c28-4669-8686-d6df1274512f
 
 Idem but only the chapters 11 and 12, using a proxy:
-    $ mangadex_dl.tcl -proxy socks5h://localhost:9050 https://mangadex.org/title/ea3122bb-0c28-4669-8686-d6df1274512f 11 12
+    $ mdex_dl.tcl -proxy socks5h://localhost:9050 https://mangadex.org/title/ea3122bb-0c28-4669-8686-d6df1274512f 11 12
 
 Monitoring example:
     $ ls
@@ -130,7 +129,7 @@ Monitoring example:
     $ cat catalog.tcllist
     {ea3122bb-0c28-4669-8686-d6df1274512f autodl 1 title "Baki the Grappler" group "TheSpinyBackTeam"}  # Grappler Baki
     5e9a2a3e-f992-4af4-a887-cd130460c9e5  # Baki Dou (2018)
-    $ mangadex_monitor.tcl -autodl -autodl-dir ~/Mangos/autodl catalog.tcllist
+    $ mdex_monitor.tcl -autodl -autodl-dir ~/Mangos/autodl catalog.tcllist
     ...
     $ ls
     Baki Dou (2018)_ea3122bb-0c28-4669-8686-d6df1274512f.xml
@@ -139,7 +138,7 @@ Monitoring example:
     timestamps.tcldict
 
 Idem using a single feed:
-    $ mangadex_monitor.tcl -single-feed -autodl-dir ~/Mangos/autodl catalog.tcllist
+    $ mdex_monitor.tcl -single-feed -autodl-dir ~/Mangos/autodl catalog.tcllist
     ...
     $ ls
     catalog.tcllist
@@ -153,4 +152,4 @@ Idem using a single feed:
 * Tcl 8.6
 * tcllib (json module)
 * curl
-* tdom (mangadex_monitor.tcl only)
+* tdom (mdex_monitor.tcl only)
