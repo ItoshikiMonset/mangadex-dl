@@ -148,7 +148,7 @@ foreach entry $catalog {
 
 	if {$no_local_tstamp || $local_tstamp == $remote_tstamp} {
 		puts stderr "No new chapters"
-		after 300; # Sleep to avoid hitting the rate limit: 5 req/s and 60 GET at-home/min
+		after 300; # Sleep to avoid hitting the rate limit of 5 req/s
 		continue
 	}
 	# Filter chapters to keep only the new ones

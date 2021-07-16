@@ -16,13 +16,13 @@ set optres [util::autocli \
 	} \
 	[file tail [info script]] \
 	{download MangaDex chapters} \
-    {{MANGA_URL [CHAPTER...]}} \
+	{{MANGA_URL [CHAPTER...]} {CHAPTER_URL...}} \
 	{
 		{Download each of the specified chapters into its own properly named directory.}
 		{If no chapter is specified, download all of them.}
 	}]
 
-if {![util::shift manga_url]} {
+if {$argc == 0} {
 	util::die [util::usage]
 }
 
@@ -32,15 +32,31 @@ if {$proxy ne ""} {
 	set ::env(https_proxy) $proxy
 }
 
-
-set manga_id [manga_url_to_id $manga_url]
-if {[catch {get_chapter_list $manga_id $lang} chapters]} {
-	util::die "Failed to download chapter list JSON!\n\n$chapters"
-}
-
-# Only keep specified chapters
-if {$argc > 0} {
-	set chapters [util::lfilter ch $chapters {[dict get $ch data attributes chapter] in $argv}]
+if {[regexp "^$URL_BASE_RE/title/($UUID_RE)\$" [lindex $argv 0] -> mid]} {
+	if {[catch {get_chapter_list $mid $lang} chapters]} {
+		util::die "Failed to download chapter list JSON!\n\n$chapters"
+	}
+	# Only keep specified chapters
+	if {$argc > 0} {
+		set chapters [util::lfilter ch $chapters {[dict get $ch data attributes chapter] in $argv}]
+	}
+} else {
+	set cids [lmap url $argv {
+		if {![regexp "^$URL_BASE_RE/chapter/($UUID_RE)\$" $url -> cid]} {
+			util::die "$url: not a chapter URL"
+		}
+		set cid
+	}]
+	set chapters [lmap cid $cids {
+		if {[catch {get_chapter $cid} chapter]} {
+			puts stderr "Failed to download chapter $cid JSON\n\n$chapter"
+			continue
+		}
+		if {$argc > 5} {
+			after 300; # Sleep to avoid hitting the rate limit of 5 req/s
+		}
+		set chapter
+	}]
 }
 
 # Iterate over the filtered chapters and download

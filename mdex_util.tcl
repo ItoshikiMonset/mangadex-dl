@@ -8,6 +8,7 @@ set URL_BASE_RE    https://mangadex\.org
 set COVER_SERVER   https://uploads.mangadex.org
 set API_URL_BASE   https://api.mangadex.org
 set USER_AGENT     {Mozilla/5.0 (Windows NT 6.1; WOW64; rv:54.0) Gecko/20100101 Firefox/54.0}
+set UUID_RE        {[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}}
 
 
 # Wrapper to set common curl options
@@ -56,15 +57,14 @@ proc api_post_json {endpoint json} {
 
 # Convert a Mangadex manga URL to its ID; mode can be "legacy"
 proc manga_url_to_id {url {mode ""}} {
-	global URL_BASE_RE
+	global URL_BASE_RE UUID_RE
 
 	if {$mode eq "legacy"} {
 		if {![regexp "^$URL_BASE_RE/title/(\\d+)/\[^/\]+\$" $url -> id]} {
 			util::die "$url: invalid legacy URL"
 		}
 	} else {
-		set uuid_re {[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}}
-		if {![regexp "^$URL_BASE_RE/title/($uuid_re)\$" $url -> id]} {
+		if {![regexp "^$URL_BASE_RE/title/($UUID_RE)\$" $url -> id]} {
 			util::die "$url: invalid URL"
 		}
 	}
@@ -137,6 +137,20 @@ proc cover_filename {cover_data lang {title ""}} {
 	}
 	set ext [file extension [dict get $cover_data data attributes fileName]]
 	append ret " - Cover$ext"
+}
+
+# Get a single chapter from its id
+proc get_chapter {cid} {
+	set query_params {
+		includes[] scanlation_group
+		includes[] manga
+	}
+	puts stderr "Downloading chapter JSON..."
+	set chapter [json::json2dict [api_get chapter/$cid $query_params]]
+	if {[dict get $chapter result] eq "error"} {
+		error [dict get $chapter errors]
+	}
+	return $chapter
 }
 
 # Get the complete chapter list (from smallest to greatest chapter number) for a manga id

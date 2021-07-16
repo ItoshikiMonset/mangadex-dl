@@ -13,6 +13,7 @@ Some useful tools to interface with MangaDex via its JSON API:
 |                                                                         |
 | SYNOPSIS                                                                |
 |     mdex_dl.tcl [OPTION]... MANGA_URL [CHAPTER...]                      |
+|     mdex_dl.tcl [OPTION]... CHAPTER_URL...                              |
 |                                                                         |
 | DESCRIPTION                                                             |
 |     Download each of the specified chapters into its own properly named |
