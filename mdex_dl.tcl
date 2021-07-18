@@ -23,7 +23,7 @@ set optres [util::autocli \
 	}]
 
 if {$argc == 0} {
-	util::die [util::usage]
+	util::usage stderr 1
 }
 
 dict assign $optres

@@ -25,7 +25,7 @@ set optres [util::autocli \
 	}]
 
 if {![util::shift catalog_path] || $argc != 0} {
-	util::die [util::usage]
+	util::usage stderr 1
 }
 
 dict assign $optres

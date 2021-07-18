@@ -52,7 +52,7 @@ set optres [util::autocli \
 	}]
 
 if {![util::shift catalog_path] || $argc != 0} {
-	util::die [util::usage]
+	util::usage stderr 1
 }
 
 dict assign $optres
@@ -104,7 +104,6 @@ if {$autodl_dir eq ""} {
 
 
 # Loop over the catalog entries
-set epoch [clock seconds]
 foreach entry $catalog {
 	if {![string is list $entry] || [llength $entry] == 0} {
 		puts stderr "$entry: not a valid catalog entry"
@@ -113,9 +112,8 @@ foreach entry $catalog {
 
 	# Download manga JSON
 	util::lshift entry manga_id
-	if {$tcl_platform(platform) eq "unix" && [chan isatty stderr]} {puts -nonewline stderr \x1b\[1m}
-	puts stderr "\[[incr entry_count]/[llength $catalog]\] Processing manga $manga_id..."
-	if {$tcl_platform(platform) eq "unix" && [chan isatty stderr]} {puts -nonewline stderr \x1b\[22m}
+	util::puts_attr stderr {{bold on}} \
+		"\[[incr entry_count]/[llength $catalog]\] Processing manga $manga_id..."
 
 	if {[catch {get_chapter_list $manga_id $lang} chapters]} {
 		puts stderr "Failed to download chapter list JSON!\n\n$chapters"
