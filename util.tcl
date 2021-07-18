@@ -288,7 +288,7 @@ namespace eval util {
 				if {$optspec ne ""} {
 					set synargs "\[OPTION\]... $synargs"
 				}
-				regsub -all {\w+}  $synargs {__&__} synargs
+				regsub -all {[A-Z0-9_]+}  $synargs {__&__} synargs
 				regsub -all {[][]} $synargs {**&**} synargs
 				puts $chan [string trimleft [format_paragraph $synargs indent $synindent {*}$opts]]
 			}

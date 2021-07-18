@@ -12,14 +12,13 @@ set optres [util::autocli \
 	{
 		proxy  {param {}   PROXY_URL {Set the curl HTTP/HTTPS proxy.}}
 		lang   {param {en} LANG_CODE {Only download chapters in this language.}}
-		covers {flag                 {Download the manga covers too.}}
 	} \
 	[file tail [info script]] \
 	{download MangaDex chapters} \
-	{{MANGA_URL [CHAPTER...]} {CHAPTER_URL...}} \
+	{{MANGA_URL [CHAPTER_NUM...]} {CHAPTER_URL...} {MANGA_URL covers [VOLUME_NUM...]}} \
 	{
-		{Download each of the specified chapters into its own properly named directory.}
-		{If no chapter is specified, download all of them.}
+		{Download each of the specified items (chapters or covers).}
+		{If no item number list is specified, download all of them.}
 	}]
 
 if {$argc == 0} {
@@ -33,6 +32,10 @@ if {$proxy ne ""} {
 }
 
 if {[regexp "^$URL_BASE_RE/title/($UUID_RE)\$" [lindex $argv 0] -> mid]} {
+	if {$argc > 1 && [lindex $argv 1] eq "covers"} {
+		dl_covers $mid $lang [lrange $argv 2 end]
+		exit
+	}
 	if {[catch {get_chapter_list $mid $lang} chapters]} {
 		util::die "Failed to download chapter list JSON!\n\n$chapters"
 	}
@@ -73,9 +76,4 @@ foreach ch $chapters {
 		puts stderr "Failed to download $outdir!\n\n$err"
 		file delete -force -- $outdir
 	}
-}
-
-if {$covers} {
-	# TODO: only download the relevant volumes ?
-	dl_covers $manga_id $lang
 }
