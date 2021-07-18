@@ -94,7 +94,7 @@ proc get_rel_groups {relationships} {
 		}
 		dict get $rel attributes name
 	}]
-	? {$groups eq ""} {{No Group}} {$groups}
+	util::? {$groups eq ""} {{No Group}} {$groups}
 }
 
 # Get chapter timestamp (using the publishAt field) in `clock seconds` format

@@ -37,8 +37,10 @@ if {[regexp "^$URL_BASE_RE/title/($UUID_RE)\$" [lindex $argv 0] -> mid]} {
 		util::die "Failed to download chapter list JSON!\n\n$chapters"
 	}
 	# Only keep specified chapters
-	if {$argc > 0} {
-		set chapters [util::lfilter ch $chapters {[dict get $ch data attributes chapter] in $argv}]
+	if {$argc > 1} {
+		set chapters [util::lfilter ch $chapters {
+			[dict get $ch data attributes chapter] in [lrange $argv 1 end]
+		}]
 	}
 } else {
 	set cids [lmap url $argv {

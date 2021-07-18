@@ -813,6 +813,9 @@ namespace eval util {
 				set chan [? {$first eq "-nonewline"} stdout {$first}]
 			}
 			4 {set chan [lindex $args 1]}
+			default {
+				error "wrong # args: should be \"puts_attr ?-nonewline? ?channelId? attrlist string\""
+			}
 		}
 		if {$tcl_platform(platform) eq "unix" && [chan isatty $chan]} {
 			set prefix [lreduceip [lindex $args end-1] "" {acc elem} {
