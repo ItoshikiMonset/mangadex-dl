@@ -8,7 +8,7 @@ source [file join $scriptdir atom.tcl]
 util::exec_require curl
 
 
-proc remove_comments str {regsub -all {#[^\n]*\n} $str {}}
+proc remove_comments str {regsub -all {#[^\n]*\n?} $str {}}
 
 proc tstamp_compare {c1 c2} {- [get_chapter_tstamp $c1] [get_chapter_tstamp $c2]}
 
