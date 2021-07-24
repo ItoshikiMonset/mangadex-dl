@@ -6,7 +6,6 @@
 
 Some useful tools to interface with MangaDex via its JSON API:
 
-* mdex_dl.tcl
 +----------------------------------------------------------------+
 | NAME                                                           |
 |     mdex_dl.tcl - download MangaDex chapters                   |
@@ -33,7 +32,6 @@ Some useful tools to interface with MangaDex via its JSON API:
 |                                                                |
 +----------------------------------------------------------------+
 
-* mdex_monitor.tcl
 +----------------------------------------------------------------------------------+
 | NAME                                                                             |
 |     mdex_monitor.tcl - monitor MangaDex mangas                                   |
@@ -89,7 +87,6 @@ Some useful tools to interface with MangaDex via its JSON API:
 |                                                                                  |
 +----------------------------------------------------------------------------------+
 
-* mdex_convert_catalog.tcl
 +---------------------------------------------------------------------------------+
 | NAME                                                                            |
 |     mdex_convert_catalog.tcl - update monitor config files for new MangaDex API |
