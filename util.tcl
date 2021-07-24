@@ -1,3 +1,4 @@
+package require Tcl 8.6
 namespace path {::tcl::mathop ::tcl::mathfunc}
 
 namespace eval util {
