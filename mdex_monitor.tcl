@@ -8,7 +8,7 @@ source [file join $scriptdir atom.tcl]
 util::exec_require curl
 
 
-proc remove_comments str {regsub -all {#[^\n]*\n?} $str {}}
+# proc remove_comments str {regsub -all {#[^\n]*\n?} $str {}}
 
 proc tstamp_compare {c1 c2} {- [get_chapter_tstamp $c1] [get_chapter_tstamp $c2]}
 
@@ -24,15 +24,18 @@ set optres [util::autocli \
 		single-feed {flag               {Use a single feed instead of one per manga.}}
 	} \
 	[file tail [info script]] \
-	{monitor MangaDex mangas} \
+	{monitor MangaDex manga updates} \
 	CATALOG \
 	{
-		{Read mangas to monitor from CATALOG, a file containing a Tcl list using the following
-		 syntax:}
-		{    {MANGA_ID ?OPTION VALUE? ...} ...}
-		{    # Comment}
+		{Read mangas to monitor from __CATALOG__, a file using the following syntax:}
+		{    CATALOG = ITEM ITEM...}
+		{    ITEM = MANGA_ID | "{" MANGA_ID OPTION VALUE OPTION VALUE... "}"}
 		{}
-		{with the following OPTIONs available:}
+		{Comments are everything from a "#" to a newline or end of file.}
+		{Since this is actually a literal Tcl list, all the spaces used in these syntax rules are
+		 runs of one or more whitespace characters ([[:space:]]+ in POSIX EREs).}
+		{}
+		{The following item OPTIONs are available:}
 		{    autodl}
 		{        If VALUE is 1, new chapters for this manga are downloaded to the directory
 			     specified via the -autodl-dir option. If the -autodl option is set, using a value
@@ -44,11 +47,16 @@ set optres [util::autocli \
 		{    title}
 		{        Use VALUE as title instead of the MangaDex provided one.}
 		{}
-		{For each manga, an Atom feed is created next to the given CATALOG file and updated for each
-		 new chapter.}
+		{For each list item:}
+		{    If this is the first run since it was added to the __CATALOG__, nothing is done except
+			 for the creation of its (empty) Atom feed in the same directory as the __CATALOG__.}
 		{}
-		{A database holding the last timestamp for each catalog entry is also created at the same
-		 place.}
+		{    Else, MangaDex is queried to find if there are new chapters since the last run. If this
+			 is the case, its Atom feed is updated with and those chapters are downloaded if autodl
+			 is currently enabled.}
+		{}
+		{A database holding the last chapter timestamp for each item is also maintained in that same
+		 directory.}
 	}]
 
 if {![util::shift catalog_path] || $argc != 0} {
