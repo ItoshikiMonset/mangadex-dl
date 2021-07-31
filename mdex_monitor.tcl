@@ -98,7 +98,7 @@ if {$autodl_dir eq ""} {
 	set autodl_dir $datadir_path
 } elseif {![file isdirectory $autodl_dir]} {
 	util::die "$autodl_dir: directory not found"
-} elseif {![file writeable $autodl_dir] || ![file executable $autodl_dir]} {
+} elseif {![file writable $autodl_dir] || ![file executable $autodl_dir]} {
 	util::die "$autodl_dir: permission to access or write denied"
 }
 
