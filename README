@@ -64,8 +64,7 @@ Some useful tools to interface with MangaDex via its JSON API:
 |                                                                                  |
 |     For each list item:                                                          |
 |           If this is the first run since it was added to the CATALOG, nothing is |
-|           done except for the creation of its (empty) Atom feed in the same      |
-|           directory as the CATALOG.                                              |
+|           done except for the creation of its (empty) Atom feed.                 |
 |                                                                                  |
 |           Else, MangaDex is queried to find if there are new chapters since the  |
 |           last run. If this is the case, the Atom feed is updated and those      |

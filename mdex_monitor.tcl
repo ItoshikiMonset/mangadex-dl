@@ -51,7 +51,7 @@ set optres [util::autocli \
 		{}
 		{For each list item:}
 		{    If this is the first run since it was added to the __CATALOG__, nothing is done except
-			 for the creation of its (empty) Atom feed in the same directory as the __CATALOG__.}
+			 for the creation of its (empty) Atom feed.}
 		{}
 		{    Else, MangaDex is queried to find if there are new chapters since the last run. If this
 			 is the case, the Atom feed is updated and those chapters are downloaded if autodl is
