@@ -119,7 +119,13 @@ proc chapter_dirname {chapter_data lang {title ""}} {
 	}
 	set vol [dict get $chapter_data data attributes volume]
 	if {$vol ne "null"} {
-		append ret " ([format v%02d $vol])"
+		if {[string is entier -strict $vol]} {
+			append ret " (v[format %02d $vol])"
+		} elseif {[string is double -strict $vol]} {
+			append ret " (v[format %04.1f $vol])"
+		} else {
+			append ret " (v$vol)"
+		}
 	}
 	set group_names [get_rel_groups [dict get $chapter_data relationships]]
 	append ret " \[[join $group_names {, }]\]"
@@ -133,7 +139,13 @@ proc cover_filename {cover_data lang {title ""}} {
 	set ret "$title - c000"
 	set vol [dict get $cover_data data attributes volume]
 	if {$vol ne "null"} {
-		append ret " ([format v%02d $vol])"
+		if {[string is entier -strict $vol]} {
+			append ret " (v[format %02d $vol])"
+		} elseif {[string is double -strict $vol]} {
+			append ret " (v[format %04.1f $vol])"
+		} else {
+			append ret " (v$vol)"
+		}
 	}
 	set ext [file extension [dict get $cover_data data attributes fileName]]
 	append ret " - Cover$ext"
