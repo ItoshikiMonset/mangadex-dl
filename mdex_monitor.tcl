@@ -163,9 +163,11 @@ foreach entry $catalog {
 	set remote_tstamp [get_chapter_tstamp [lindex $chapters end]]
 	dict set tstampdb $manga_id $remote_tstamp
 
-	if {$no_local_tstamp || $local_tstamp == $remote_tstamp} {
-		puts stderr "No new chapters"
-		after 500; # Sleep to avoid hitting the rate limit of 5 req/s
+	if {$no_local_tstamp} || $local_tstamp == $remote_tstamp} {
+		puts stderr [util::? {$no_local_tstamp} \
+						 "New catalog item, monitoring chapter updates from now on" \
+						 "No new chapters"]
+		after 300; # Sleep to avoid hitting the rate limit of 5 req/s
 		continue
 	}
 	# Filter chapters to keep only the new ones

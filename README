@@ -139,7 +139,8 @@ or using chapter URLs:
 Download the covers for volume 1, 2 and 3:
     $ mdex_dl.tcl https://mangadex.org/title/ea3122bb-0c28-4669-8686-d6df1274512f covers 1 2 3
 
-Monitoring example:
+Monitoring example with two mangas already monitored (including a new chapter for the first one)
+and another being added:
     $ ls manga_dir/
     catalog.tcllist
     $ cat manga_dir/catalog.tcllist
@@ -149,21 +150,21 @@ Monitoring example:
         title "Baki the Grappler"
         group "TheSpinyBackTeam"
     }
-    {f1c716b5-e82f-4625-a646-280cfa66abad title "City Hunter"}
+    $ echo '{f1c716b5-e82f-4625-a646-280cfa66abad title "City Hunter"}' >>manga_dir/catalog.tcllist
     $ mdex_monitor.tcl -autodl manga_dir/catalog.tcllist
     [1/3] Processing manga 5e9a2a3e-f992-4af4-a887-cd130460c9e5...
     Downloading manga feed JSON...
-    No new chapters
+    [1/1] Downloading Baki Dou (2018) - c093 [TheSpinyBackTeam]...
+    Downloading @Home server URL JSON...
+    <...curl output...>
     [2/3] Processing manga ea3122bb-0c28-4669-8686-d6df1274512f...
     Downloading manga feed JSON...
     No new chapters
     [3/3] Processing manga f1c716b5-e82f-4625-a646-280cfa66abad...
     Downloading manga feed JSON...
-    [1/1] Downloading City Hunter - c185 (v34) [ACF Team]...
-    Downloading @Home server URL JSON...
-    <...curl output...>
+    New catalog item, monitoring chapter updates from now on
     $ ls -1F manga_dir/
-    City Hunter - c185 (v34) [ACF Team]/
+    Baki Dou (2018) - c093 [TheSpinyBackTeam]/
     Baki Dou (2018)_ea3122bb-0c28-4669-8686-d6df1274512f.xml
     Baki the Grappler_5e9a2a3e-f992-4af4-a887-cd130460c9e5.xml
     City Hunter_ea3122bb-0c28-4669-8686-d6df1274512f.xml
@@ -175,7 +176,7 @@ Idem using a single feed:
     $ mdex_monitor.tcl -single-feed -auto-dl manga_dir/catalog.tcllist
     ...
     $ ls -1F manga_dir/
-    City Hunter - c185 (v34) [ACF Team]/
+    Baki Dou (2018) - c093 [TheSpinyBackTeam]/
     catalog.tcllist
     mangadex.xml
     timestamps.tcldict
