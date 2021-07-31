@@ -68,11 +68,11 @@ Some useful tools to interface with MangaDex via its JSON API:
 |           directory as the CATALOG.                                              |
 |                                                                                  |
 |           Else, MangaDex is queried to find if there are new chapters since the  |
-|           last run. If this is the case, its Atom feed is updated with and those |
+|           last run. If this is the case, the Atom feed is updated and those      |
 |           chapters are downloaded if autodl is currently enabled.                |
 |                                                                                  |
-|     A database holding the last chapter timestamp for each item is also          |
-|     maintained in that same directory.                                           |
+|     A database holding the last chapter timestamp for each item is maintained    |
+|     next to CATALOG.                                                             |
 |                                                                                  |
 | OPTIONS                                                                          |
 |     -proxy PROXY_URL                                                             |

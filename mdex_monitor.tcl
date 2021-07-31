@@ -54,11 +54,11 @@ set optres [util::autocli \
 			 for the creation of its (empty) Atom feed in the same directory as the __CATALOG__.}
 		{}
 		{    Else, MangaDex is queried to find if there are new chapters since the last run. If this
-			 is the case, its Atom feed is updated with and those chapters are downloaded if autodl
-			 is currently enabled.}
+			 is the case, the Atom feed is updated and those chapters are downloaded if autodl is
+			 currently enabled.}
 		{}
-		{A database holding the last chapter timestamp for each item is also maintained in that same
-		 directory.}
+		{A database holding the last chapter timestamp for each item is maintained next to
+		 __CATALOG__.}
 	}]
 
 if {![util::shift catalog_path] || $argc != 0} {
