@@ -32,73 +32,75 @@ Some useful tools to interface with MangaDex via its JSON API:
 |                                                                |
 +----------------------------------------------------------------+
 
-+----------------------------------------------------------------------------------+
-| NAME                                                                             |
-|     mdex_monitor.tcl - monitor MangaDex manga updates                            |
-|                                                                                  |
-| SYNOPSIS                                                                         |
-|     mdex_monitor.tcl [OPTION]... CATALOG                                         |
-|                                                                                  |
-| DESCRIPTION                                                                      |
-|     Read mangas to monitor from CATALOG, a file using the following syntax:      |
-|           CATALOG = ITEM ITEM...                                                 |
-|           ITEM = MANGA_ID | "{" MANGA_ID OPTION VALUE OPTION VALUE... "}"        |
-|                                                                                  |
-|     Comments are everything from a "#" to a newline or end of file.              |
-|     Since this is actually a literal Tcl list, all the spaces used in these      |
-|     syntax rules are runs of one or more whitespace characters ([[:space:]]+ in  |
-|     POSIX EREs).                                                                 |
-|                                                                                  |
-|     The following item OPTIONs are available:                                    |
-|           autodl                                                                 |
-|               If VALUE is 1, new chapters for this manga are downloaded to the   |
-|               directory specified via the -autodl-dir option. If the -autodl     |
-|               option is set, using a value of 0 disables it.                     |
-|                                                                                  |
-|           group                                                                  |
-|               Only download chapters having VALUE matching one of their group    |
-|               names.                                                             |
-|                                                                                  |
-|           title                                                                  |
-|               Use VALUE as title instead of the MangaDex provided one.           |
-|                                                                                  |
-|     For each list item:                                                          |
-|           If this is the first run since it was added to the CATALOG, nothing is |
-|           done except for the creation of its (empty) Atom feed.                 |
-|                                                                                  |
-|           Else, MangaDex is queried to find if there are new chapters since the  |
-|           last run. If this is the case, the Atom feed is updated and those      |
-|           chapters are downloaded if autodl is currently enabled.                |
-|                                                                                  |
-|     A database holding the last chapter timestamp for each item is maintained    |
-|     next to CATALOG.                                                             |
-|                                                                                  |
-| OPTIONS                                                                          |
-|     -proxy PROXY_URL                                                             |
-|         Set the curl HTTP/HTTPS proxy.                                           |
-|                                                                                  |
-|     -lang LANG_CODE                                                              |
-|         Only monitor new chapters in this language.                              |
-|         Defaults to "en".                                                        |
-|                                                                                  |
-|     -autodl                                                                      |
-|         Set the "autodl" option for every catalog item.                          |
-|                                                                                  |
-|     -autodl-dir DIRECTORY                                                        |
-|         Where to auto download new chapters.                                     |
-|         Defaults to the same directory as CATALOG.                               |
-|                                                                                  |
-|     -feed-dir DIRECTORY                                                          |
-|         Where to store the chapter update feeds.                                 |
-|         Defaults to the same directory as CATALOG.                               |
-|                                                                                  |
-|     -single-feed                                                                 |
-|         Produce a single feed instead of one per manga.                          |
-|                                                                                  |
-|     -help                                                                        |
-|         Print this help message and exit.                                        |
-|                                                                                  |
-+----------------------------------------------------------------------------------+
++-----------------------------------------------------------------------------------+
+| NAME                                                                              |
+|     mdex_monitor.tcl - monitor MangaDex manga updates                             |
+|                                                                                   |
+| SYNOPSIS                                                                          |
+|     mdex_monitor.tcl [OPTION]... CATALOG                                          |
+|                                                                                   |
+| DESCRIPTION                                                                       |
+|     Read mangas to monitor from CATALOG, a file using the following syntax:       |
+|           CATALOG = ITEM ITEM...                                                  |
+|           ITEM = MANGA_ID | "{" MANGA_ID OPTION VALUE OPTION VALUE... "}"         |
+|                                                                                   |
+|     Comments are everything from a "#" to a newline or end of file.               |
+|     Since this is actually a literal Tcl list, all the spaces used in these       |
+|     syntax rules are runs of one or more whitespace characters ([[:space:]]+ in   |
+|     POSIX EREs).                                                                  |
+|                                                                                   |
+|     The following item OPTIONs are available:                                     |
+|           autodl                                                                  |
+|               If VALUE is 1, new chapters for this manga are downloaded to the    |
+|               directory specified via the -autodl-dir option. If the -autodl      |
+|               option is set, using a value of 0 disables it.                      |
+|                                                                                   |
+|           group                                                                   |
+|               Only download chapters having VALUE matching one of their group     |
+|               names.                                                              |
+|                                                                                   |
+|           title                                                                   |
+|               Use VALUE as title instead of the MangaDex provided one.            |
+|                                                                                   |
+|     For each item:                                                                |
+|           Query MangaDex for the item's chapter list.                             |
+|                                                                                   |
+|           If this is the first run since it was added to CATALOG, nothing is done |
+|           except for the creation of its (empty) Atom feed.                       |
+|                                                                                   |
+|           Else, if there are new chapters since the last run, the Atom feed is    |
+|           updated and those chapters are downloaded if autodl is currently        |
+|           enabled.                                                                |
+|                                                                                   |
+|     A database holding the last chapter timestamp for each item is maintained     |
+|     next to CATALOG.                                                              |
+|                                                                                   |
+| OPTIONS                                                                           |
+|     -proxy PROXY_URL                                                              |
+|         Set the curl HTTP/HTTPS proxy.                                            |
+|                                                                                   |
+|     -lang LANG_CODE                                                               |
+|         Only monitor new chapters in this language.                               |
+|         Defaults to "en".                                                         |
+|                                                                                   |
+|     -autodl                                                                       |
+|         Set the "autodl" option for every catalog item.                           |
+|                                                                                   |
+|     -autodl-dir DIRECTORY                                                         |
+|         Where to auto download new chapters.                                      |
+|         Defaults to the same directory as CATALOG.                                |
+|                                                                                   |
+|     -feed-dir DIRECTORY                                                           |
+|         Where to store the chapter update feeds.                                  |
+|         Defaults to the same directory as CATALOG.                                |
+|                                                                                   |
+|     -single-feed                                                                  |
+|         Produce a single feed instead of one per manga.                           |
+|                                                                                   |
+|     -help                                                                         |
+|         Print this help message and exit.                                         |
+|                                                                                   |
++-----------------------------------------------------------------------------------+
 
 +---------------------------------------------------------------------------------+
 | NAME                                                                            |

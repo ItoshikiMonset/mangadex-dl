@@ -49,13 +49,14 @@ set optres [util::autocli \
 		{    title}
 		{        Use VALUE as title instead of the MangaDex provided one.}
 		{}
-		{For each list item:}
-		{    If this is the first run since it was added to the __CATALOG__, nothing is done except
-			 for the creation of its (empty) Atom feed.}
+		{For each item:}
+		{    Query MangaDex for the item's chapter list.}
 		{}
-		{    Else, MangaDex is queried to find if there are new chapters since the last run. If this
-			 is the case, the Atom feed is updated and those chapters are downloaded if autodl is
-			 currently enabled.}
+		{    If this is the first run since it was added to __CATALOG__, nothing is done except for
+			 the creation of its (empty) Atom feed.}
+		{}
+		{    Else, if there are new chapters since the last run, the Atom feed is updated and those
+			 chapters are downloaded if autodl is currently enabled.}
 		{}
 		{A database holding the last chapter timestamp for each item is maintained next to
 		 __CATALOG__.}
