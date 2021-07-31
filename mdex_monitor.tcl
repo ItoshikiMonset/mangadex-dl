@@ -17,11 +17,13 @@ proc tstamp_compare {c1 c2} {- [get_chapter_tstamp $c1] [get_chapter_tstamp $c2]
 set optres [util::autocli \
 	{
 		proxy       {param "" PROXY_URL {Set the curl HTTP/HTTPS proxy.}}
-		lang        {param en LANG_CODE {Only monitor chapters in this language.}}
-		autodl      {flag               {Set the "autodl" option for every manga.}}
+		lang        {param en LANG_CODE {Only monitor new chapters in this language.}}
+		autodl      {flag               {Set the "autodl" option for every catalog item.}}
 		autodl-dir  {param "" DIRECTORY {Where to auto download new chapters.} \
-						                {Defaults to the same directory as CATALOG.}}
-		single-feed {flag               {Use a single feed instead of one per manga.}}
+						                {Defaults to the same directory as __CATALOG__.}}
+		feed-dir    {param "" DIRECTORY {Where to store the chapter update feeds.} \
+						                {Defaults to the same directory as __CATALOG__.}}
+		single-feed {flag               {Produce a single feed instead of one per manga.}}
 	} \
 	[file tail [info script]] \
 	{monitor MangaDex manga updates} \
@@ -93,15 +95,6 @@ util::atexit add {
 	util::write_wrap $tstampdb_path $tstampdb
 }
 
-if {$single_feed} {
-	set feed_path [file join $datadir_path mangadex.xml]
-	set feed [atom read_or_create $feed_path "new MangaDex chapters"]
-	util::atexit add {
-		global feed
-		atom write $feed
-	}
-}
-
 if {$autodl_dir eq ""} {
 	set autodl_dir $datadir_path
 }
@@ -111,6 +104,23 @@ if {![file isdirectory $autodl_dir]} {
 	util::die "$autodl_dir: permission to access or write denied"
 }
 
+if {$feed_dir eq ""} {
+	set feed_dir $datadir_path
+}
+if {![file isdirectory $feed_dir]} {
+	util::die "$feed_dir: directory not found"
+} elseif {![file writable $feed_dir] || ![file executable $feed_dir]} {
+	util::die "$feed_dir: permission to access or write denied"
+}
+
+if {$single_feed} {
+	set feed_path [file join $feed_dir mangadex.xml]
+	set feed [atom read_or_create $feed_path "new MangaDex chapters"]
+	util::atexit add {
+		global feed
+		atom write $feed
+	}
+}
 
 # Loop over the catalog entries
 foreach entry $catalog {
@@ -141,7 +151,7 @@ foreach entry $catalog {
 
 	# Read feed or create per manga feed
 	if {!$single_feed} {
-		set feed_path [file join $datadir_path [util::path_sanitize ${manga_title}_${manga_id}].xml]
+		set feed_path [file join $feed_dir [util::path_sanitize ${manga_title}_${manga_id}].xml]
 		set feed [atom read_or_create $feed_path "$manga_title - new MangaDex chapters"]
 	}
 

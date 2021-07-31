@@ -79,18 +79,22 @@ Some useful tools to interface with MangaDex via its JSON API:
 |         Set the curl HTTP/HTTPS proxy.                                           |
 |                                                                                  |
 |     -lang LANG_CODE                                                              |
-|         Only monitor chapters in this language.                                  |
+|         Only monitor new chapters in this language.                              |
 |         Defaults to "en".                                                        |
 |                                                                                  |
 |     -autodl                                                                      |
-|         Set the "autodl" option for every manga.                                 |
+|         Set the "autodl" option for every catalog item.                          |
 |                                                                                  |
 |     -autodl-dir DIRECTORY                                                        |
 |         Where to auto download new chapters.                                     |
 |         Defaults to the same directory as CATALOG.                               |
 |                                                                                  |
+|     -feed-dir DIRECTORY                                                          |
+|         Where to store the chapter update feeds.                                 |
+|         Defaults to the same directory as CATALOG.                               |
+|                                                                                  |
 |     -single-feed                                                                 |
-|         Use a single feed instead of one per manga.                              |
+|         Produce a single feed instead of one per manga.                          |
 |                                                                                  |
 |     -help                                                                        |
 |         Print this help message and exit.                                        |
