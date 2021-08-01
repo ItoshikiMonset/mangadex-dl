@@ -8,7 +8,7 @@ source [file join $scriptdir atom.tcl]
 util::exec_require curl
 
 
-# proc remove_comments str {regsub -all {#[^\n]*\n?} $str {}}
+proc remove_comments str {regsub -all {#[^\n]*\n?} $str {}}
 
 proc tstamp_compare {c1 c2} {- [get_chapter_tstamp $c1] [get_chapter_tstamp $c2]}
 
@@ -164,7 +164,7 @@ foreach entry $catalog {
 	set remote_tstamp [get_chapter_tstamp [lindex $chapters end]]
 	dict set tstampdb $manga_id $remote_tstamp
 
-	if {$no_local_tstamp} || $local_tstamp == $remote_tstamp} {
+	if {$no_local_tstamp || $local_tstamp == $remote_tstamp} {
 		puts stderr [util::? {$no_local_tstamp} \
 						 "New catalog item, monitoring chapter updates from now on" \
 						 "No new chapters"]
