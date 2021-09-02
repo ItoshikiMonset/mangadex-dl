@@ -132,7 +132,7 @@ foreach entry $catalog {
 
 	# Download manga JSON
 	util::lshift entry manga_id
-	util::puts_attr stderr {{bold on}} \
+	util::puts_attr stderr {bold on} \
 		"\[[incr entry_count]/[llength $catalog]\] Processing manga $manga_id..."
 
 	if {[catch {get_chapter_list $manga_id $lang} chapters]} {
@@ -143,7 +143,12 @@ foreach entry $catalog {
 	# Parse the entry extra options
 	set autodl $autodl_default
 	set group_filter ""
-	set manga_title [get_rel_title [dict get [lindex $chapters 0] relationships] $lang]
+	try {
+		set manga_title [get_rel_title [dict get [lindex $chapters 0] relationships] $lang]
+	} trap {TCL LOOKUP DICT} {} {
+		util::puts_attr stderr {fgcolor red} "Dict lookup error in `$chapters`"
+		continue
+	}
 	if {[llength $entry] != 0} {
 		dict get? $entry autodl autodl
 		dict get? $entry group_filter group
@@ -178,8 +183,13 @@ foreach entry $catalog {
 	# and group matches at least one group_name
 	set ch_count 0
 	foreach ch $chapters {
-		set ch_dirname [chapter_dirname $ch $lang $manga_title]
-		set group_names [get_rel_groups [dict get $ch relationships]]
+		try {
+			set ch_dirname [chapter_dirname $ch $lang $manga_title]
+			set group_names [get_rel_groups [dict get $ch relationships]]
+		} trap {TCL LOOKUP DICT} {} {
+			util::puts_attr stderr {fgcolor red} "Dict lookup failure in `$ch`"
+			continue
+		}
 		if {$autodl && ($group_filter eq "" || $group_filter in $group_names)} {
 			set outdir [file join $autodl_dir [util::path_sanitize $ch_dirname]]
 			if {[file exists $outdir] && ![util::is_dir_empty $outdir]} {

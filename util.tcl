@@ -10,6 +10,69 @@ namespace eval util {
                                # Misc utilities #
                                ##################
 
+	proc procname {} {
+		dict get [info frame -1] proc
+	}
+
+	# A nice apply wrapper that uses the caller's namespace if not specified
+	#
+	# Example:
+	#     % set l [lambda args {puts $args}]; puts $l
+	#     apply {args {puts $args} ::}
+	#     % {*}$l c "d e"
+	#     c d e
+	proc lambda {params body {ns ""}} {
+		list apply [list $params $body [? {$ns ne ""} {$ns} {[uplevel 1 namespace current]}]]
+	}
+
+	# Partial application of lambdas
+	proc papply {lambda args} {
+		concat $lambda $args
+	}
+
+	# Named argument version of proc; $args contains the merged optional/provided argument dict
+	# and dict::assign is called on this dict before evaluating the body
+	#
+	# Example:
+	#     % naproc test {arg1 arg2} {arg3 1 arg4 {hello world}} {
+	#           puts [list $arg1 $arg2 $arg3 $arg4]
+	#       }
+	#     % test arg1 foo arg2 bar
+	#     foo bar 1 {hello world}
+	#     % test arg1 foo arg2 bar arg3 zzz
+	#     foo bar zzz {hello world}
+	proc naproc {name mandatory_args optional_args body} {
+		tailcall proc $name args [template {
+			if {[llength $args] % 2 != 0} {
+				error "[util::procname]: args isn't a dictionary"
+			}
+			if {[llength @mandatory_args@] != 0} {
+				foreach marg @mandatory_args@ {
+					dict set margset $marg {}
+				}
+				dict for {key val} $args {
+					if {[::tcl::mathop::in $key @mandatory_args@]} {
+						dict unset margset $key
+						if {[dict size $margset] == 0} {
+							break
+						}
+					} elseif {![dict exists @optional_args@ $key]} {
+						error "[util::procname]: unknown argument `$key`"
+					}
+				}
+				if {[dict size $margset] != 0} {
+					set arglist [util::pretty_list [dict keys $margset]]
+					error [string cat "[util::procname]: mandatory "           \
+							   "argument[util::? {[llength $arglist] > 1} s] " \
+							   [util::pretty_list [dict keys $margset]]        \
+							   " missing"]
+				}
+			}
+			set args [dict merge @optional_args@ $args]
+			dict assign $args
+		}]\n$body
+	}
+
 	# Detect if a channel is a tty
 	proc ::tcl::chan::isatty {chan} {
 		::tcl::mathop::! [catch {chan configure $chan -mode}]
@@ -18,45 +81,6 @@ namespace eval util {
 	namespace ensemble configure chan -map \
 		[linsert [namespace ensemble configure chan -map] end \
 			 isatty ::tcl::chan::isatty]
-
-	# Add/delete scripts to run when exiting (incl. calls to exit and error)
-	# Syntax is `atexit add|del script`, scripts are run in the global namespace
-	#
-	# Example:
-	#     util::atexit add {puts "hello world"}
-	#     util::atexit add {puts [clock format [clock seconds]]}
-	#     util::atexit add {global env; puts "env: $env(HOME)"}
-	#     util::atexit del {puts "hello world"}
-	#
-	# will print
-	#     Wed Jul 14 14:27:58 CEST 2021
-	#     env: /home/user
-	#
-	# when reaching the end
-	variable atexit_scripts {}
-	proc atexit {action script} {
-		variable atexit_scripts
-
-		switch $action {
-			add {
-				lappend atexit_scripts $script
-			}
-			del {
-				set idx [lsearch -exact $atexit_scripts $script]
-				set atexit_scripts [lreplace $atexit_scripts $idx $idx]
-			}
-			default {
-				error "$action: must be \"add\" or \"del\""
-			}
-		}
-		return
-	}
-
-	trace add execution exit enter [list apply \
-		[list args \
-			 "foreach script \$util::atexit_scripts {eval \$script}" \
-			] \
-		]
 
 	# Identity
 	proc id {x} {
@@ -69,7 +93,7 @@ namespace eval util {
 	}
 
 	proc until {test body} {
-		uplevel 1 [list while !($test) $body]
+		tailcall while !($test) $body
 	}
 
 	# Random integer in range [0, max[
@@ -81,7 +105,7 @@ namespace eval util {
 		if {$keyword eq "while"} {
 			set test "!($test)"
 		} elseif {$keyword ne "until"} {
-			return -code error "unknown keyword \"$keyword\": must be until or while"
+			return -code error "unknown keyword `$keyword`: must be until or while"
 		}
 		set cond [list expr $test]
 		while 1 {
@@ -91,6 +115,13 @@ namespace eval util {
 			}
 		}
 		return
+	}
+
+	# Allow to call variable with multiple names
+	proc variables {args} {
+		foreach name $args {
+			uplevel 1 variable $name
+		}
 	}
 
 	# Ternary; properly quote variables/command substs to avoid surprises
@@ -107,7 +138,7 @@ namespace eval util {
 		if {$argnum > $argc} {
 			return 0
 		}
-		uplevel "global argv; set argv \[lassign \$argv $args\]"
+		uplevel 1 "global argv; set argv \[lassign \$argv $args\]"
 		decr argc $argnum
 		return 1
 	}
@@ -118,18 +149,89 @@ namespace eval util {
 		exit $code
 	}
 
-	# Execute body every ms milliseconds or cancel an existing every
-	proc every {ms body} {
+	# Eval $body in namespace $ns every $ms milliseconds or cancel an existing every
+	proc every {ms body {ns ""}} {
 		variable every
 
+		if {$ns eq ""} {
+			set ns [uplevel 1 namespace current]
+		}
+
 		if {$ms eq "cancel"} {
-			after cancel [dict get $every $body]
-			dict unset every $body
+			after cancel [dict get $every $ns $body]
 			return
 		}
-		eval $body
-		dict set every $body [namespace code [info level 0]]
-		tailcall after $ms [namespace code [info level 0]]
+		namespace inscope $ns $body
+		dict set every $ns $body [after $ms [namespace code [list every $ms $body $ns]]]
+	}
+
+	# Open a FIFO (named pipe) for IPC purposes at $path and add $body as readable event
+	# handler evaluted in the caller's namespace with $chan set to the returned channel
+	proc open_ipc_fifo {path body} {
+		variable ipc_fifo_dummy_writer
+
+		catch {exec mkfifo $path}
+		set fifo [open $path {RDONLY NONBLOCK}]
+		dict set ipc_fifo_dummy_writer $fifo [open $path WRONLY]
+		chan event $fifo readable \
+			[papply [lambda chan $body [uplevel 1 namespace current]] $fifo]
+		return $fifo
+	}
+
+	proc close_ipc_fifo {chan} {
+		variable ipc_fifo_dummy_writer
+
+		close $chan
+		close [dict get $ipc_fifo_dummy_writer $chan]
+	}
+
+                         #############################
+                         # String and text utilities #
+                         #############################
+
+	# Opposite of append
+	proc prepend {_var args} {
+		upvar $_var var
+		set var [string cat [? {[info exists var]} {$var}] {*}$args]
+	}
+
+	# Produces a string of the form `elem1`, `elem2`, ... and `elemEnd`
+	proc pretty_list {list} {
+		if {[llength $list] == 0} {
+			return
+		}
+		set res `[lindex $list 0]`
+		foreach elem [lrange $list 1 end-1] {
+			append res ", `$elem`"
+		}
+		if {[llength $list] > 1} {
+			append res " and `[lindex $list end]`"
+		}
+		return $res
+	}
+
+	# Selectively replace strings of the form @varname@ in the last argument by either
+	# the variables available in the caller (minus global tclvars) or the remaining arguments
+	# as a {varname value...} list; the substituted value is always quoted
+	#
+	# Example:
+	#     % set var1 foobar
+	#     % eval [template var2 {hello world} {puts "@var1@ [join @var2@ ", "]"}]
+	#     foobar hello, world
+	proc template {args} {
+		foreach var [uplevel 1 info vars] {
+			if {$var ni {
+				auto_path env errorCode errorInfo tcl_library tcl_patchLevel tcl_pkgPath
+				tcl_platform tcl_precision tcl_rcFileName tcl_traceCompile tcl_traceExec
+				tcl_wordchars tcl_nonwordchars tcl_version argc argv argv0 tcl_interactive
+			} && [uplevel 1 [list info exists $var]] && ![uplevel 1 [list array exists $var]]} {
+				lappend map [list @$var@] [list [uplevel 1 [list set $var]]]
+			}
+		}
+		foreach {var val} [lrange $args 0 end-1] {
+			lappend map [list @$var@] [list $val]
+		}
+		string map $map [lindex $args end]
 	}
 
 	# Like textutil::adjust followed by textutil::indent with the following
@@ -287,7 +389,7 @@ namespace eval util {
 			foreach synargs $synargslist {
 				puts -nonewline $chan "[format_paragraph "**$name**" indent $tabw {*}$opts] "
 				if {$optspec ne ""} {
-					set synargs "\[OPTION\]... $synargs"
+					set synargs "\[__OPTION__\]... $synargs"
 				}
 				regsub -all {[A-Z0-9_]+}  $synargs {__&__} synargs
 				regsub -all {[][]} $synargs {**&**} synargs
@@ -321,7 +423,7 @@ namespace eval util {
 						puts $chan [format_paragraph $par indent [* $tabw 2] {*}$opts]
 					}
 					if {[lindex $val 1] ne ""} {
-						puts $chan [format_paragraph "Defaults to \"[lindex $val 1]\"." \
+						puts $chan [format_paragraph "Defaults to `[lindex $val 1]`." \
 										indent [* $tabw 2] {*}$opts]
 					}
 				}
@@ -388,12 +490,140 @@ namespace eval util {
 		return $result
 	}
 
-                              ####################
-                              # String utilities #
-                              ####################
-
 	# Split a string into block of size chars (last block can be of inferior size)
 	proc block_split {str size} {regexp -inline -all ".{1,$size}" $str}
+
+	# AWK like text parsing; only the `parse {data script args}` proc is to be called directly
+	# $data is the text to parse, $script is a list of condition/action pairs (rules) and $args is a
+	# dict containing options with keys FS (field separator) and RS (record separator)
+	#
+	# The process is as follow:
+	# 1| If there is a rule with its condition equal to BEGIN, execute it
+	# 2| Foreach record [split $data $RS] (record actually stored in variable named 0)
+	# 3|     Split $0 into fields (list F), populate NF (field number) and read-only
+	#            aliases 1..NF (so that [lindex $F 0] == $1 and so on)
+	# 4|     Incr NR (starts at 1)
+	# 5|     Foreach {cond action} $script
+	# 6|         if {$cond} eval $action
+	# 7| If there is a rule with its condition equal to END, execute it
+	# 8| Return the value of variable RET
+	#
+	# Some local procs are available for convenience during action evaluation (6):
+	# * ~ regexp ?string?
+	#       regexp $exp $string (or $0 if no $string is specified) wrapper
+	# * exit ?mode?:
+	#       if mode is "action", exit the current action (continue loop 5)
+	#       if mode is "record", stop processing of current record and proceed to the next
+	#           (continue loop 2, equivalent to AWK's next statement)
+	#       if mode is "end", stop processing and process END rule (goto 7)
+	#       if no mode is given, stop processing (goto 8)
+	#
+	# ToDo: handle empty $data?
+	# ToDo: don't split $data, use string first and range to extract records
+	#       to allow for RS changes and getline proc
+	interp alias {} ::util::parse {} ::util::parse::parse
+	namespace eval parse {
+		namespace import ::util::*
+		namespace path {::tcl::mathop ::tcl::mathfunc}
+
+		variables F FS RS NF NR
+
+		proc exit {{mode ""}} {
+			switch $mode {
+				action  {return -code 5}
+				record  {return -code 6}
+				end     {return -code 7}
+				""      {return -code 8}
+				default {error "$mode: unknown mode, must be `action`, `record` or `end`"}
+			}
+		}
+
+		proc ~ {args} {
+			switch [llength $args] {
+				1 {upvar 1 0 0; regexp {*}$args $0}
+				2 {regexp {*}$args}
+				0 -
+				default {error "=~ regexp ?string?"}
+			}
+		}
+
+		proc fieldsplit {args} {
+			variables F FS NF NR
+			upvar 0 0
+
+			set F [switch -glob $FS {
+				" "		{set 0}
+				?		{split $0 $FS}
+				default {
+					package require textutil::split
+					::textutil::split::splitx $0 $FS
+				}
+			}]
+			if {$NR} {
+				uplevel 1 unset [util::iota $NF 1]
+			}
+			set NF [llength $F]
+			uplevel 1 [list lassign $F] [util::iota $NF 1]
+		}
+
+		proc parse {data script args} {
+			variables F FS RS NF NR
+			dict assign [dict merge [dict create FS " " RS \n] $args]
+			set RET {}
+			set NR 0
+
+			if {[set i [lsearch -exact $script BEGIN]] != -1} {
+				set begaction [lindex $script [+ $i 1]]
+				set script [lreplace $script $i $i+1]
+			}
+			if {[set i [lsearch -exact $script END]] != -1} {
+				set endaction [lindex $script [+ $i 1]]
+				set script [lreplace $script $i $i+1]
+			}
+
+			set exit 0
+			if {[info exists begaction]} {
+				try $begaction \
+					on 5 {} {} \
+					on 6 {} {error "`exit record` has no meaning in a BEGIN action"} \
+					on 7 {} {set exit 1} \
+					on 8 {} {set exit 2}
+			}
+			if {$exit == 0} {
+				trace add variable FS write fieldsplit
+				trace add variable 0  write fieldsplit
+				try {
+					foreach 0 [split $data $RS] {
+						incr NR
+						foreach {pattern action} $script {
+							if $pattern {
+								try $action \
+									on 5 {} {} \
+									on 6 {} {break} \
+									on 7 {} {set exit 1; break} \
+									on 8 {} {set exit 2; break}
+							}
+						}
+						if {$exit != 0} {
+							break
+						}
+					}
+				} finally {
+					trace remove variable FS write fieldsplit
+					trace remove variable 0  write fieldsplit
+				}
+			}
+			if {$exit < 2 && [info exists endaction]} {
+				try $endaction \
+					on 5 {} {} \
+					on 6 {} {error "`exit record` has no meaning in an END action"} \
+					on 7 {} {error "`exit end` has no meaning in an END action"} \
+					on 8 {} {}
+			}
+			return $RET
+		}
+	}
+
 
                           ###########################
                           # Path and file utilities #
@@ -464,28 +694,44 @@ namespace eval util {
 
 	# Traditional FP foldl/reduce
 	# Examples:
-	#     lreduce {1 2 3} 0  {acc elem} {+ $acc $elem} => 6
-	#     lreduce {1 2 3} "" {acc elem} {string cat $acc $elem} => 123
+	#     % lreduce {1 2 3 4} 0  {acc elem} {+ $acc $elem}
+	#     10
+	#     % lreduce {1 2 3 4} 0 {acc e1 e2} {+ $acc [* $e1 $e2]}
+	#     14
+	#     % lreduce {1 2 3 4} "" {acc elem} {string cat $acc $elem}
+	#     1234
 	proc lreduce {list init argvars script} {
-		upvar 1 [lindex $argvars 0] acc [lindex $argvars 1] elem
-		set acc $init
-		foreach elem $list {
-			set acc [uplevel 1 $script]
+		set elem_vars [lassign $argvars acc_var]
+		upvar 1 $acc_var $acc_var
+		foreach elem_var $elem_vars {
+			upvar 1 $elem_var $elem_var
 		}
-		return $acc
+		set $acc_var $init
+		foreach $elem_vars $list {
+			set $acc_var [uplevel 1 $script]
+		}
+		set $acc_var
 	}
 
 	# Traditional FP foldl/reduce (inplace)
 	# Examples:
-	#     lreduceip {1 2 3} 0  {acc elem} {incr acc $elem} => 6
-	#     lreduceip {1 2 3} "" {acc elem} {append acc $elem} => 123
+	#     % lreduceip {1 2 3 4} 0  {acc elem} {incr acc $elem}
+	#     10
+	#     % lreduce {1 2 3 4} 0 {acc e1 e2} {incr acc [* $e1 $e2]}
+	#     14
+	#     % lreduceip {1 2 3 4} "" {acc elem} {append acc $elem}
+	#     1234
 	proc lreduceip {list init argvars script} {
-		upvar 1 [lindex $argvars 0] acc [lindex $argvars 1] elem
-		set acc $init
-		foreach elem $list {
+		set elem_vars [lassign $argvars acc_var]
+		upvar 1 $acc_var $acc_var
+		foreach elem_var $elem_vars {
+			upvar 1 $elem_var $elem_var
+		}
+		set $acc_var $init
+		foreach $elem_vars $list {
 			uplevel 1 $script
 		}
-		return $acc
+		set $acc_var
 	}
 
 	# Opposite of lappend
@@ -514,7 +760,7 @@ namespace eval util {
 
 	# lassign _list and set it to the result immediately; returns nothing
 	proc lshift {_list args} {
-		uplevel "set [list $_list] \[lassign \$[list $_list] $args\]"
+		uplevel 1 "set [list $_list] \[lassign \$[list $_list] $args\]"
 	}
 
 	# Append suffix to all the elements of list and return the resulting list
@@ -556,14 +802,14 @@ namespace eval util {
 	# Assign the dict values to key-named variables (with s/[ -]/_/g applied to
 	# them).
 	proc ::tcl::dict::assign {dict} {
-		uplevel [list lassign [values $dict]] [lmap s [keys $dict] {string map {- _ " " _} $s}]
+		tailcall lassign [values $dict] {*}[lmap s [keys $dict] {string map {- _ " " _} $s}]
 	}
 
 	# Join a dict to produce a string of the form
 	# string cat $key_1 $inner $val_1 $outer $key_2 $inner $val_2 ... $key_end $inner $val_end
 	proc ::tcl::dict::join {dict {inner " "} {outer \n}} {
 		dict for {key val} $dict {
-			append acc $outer$key$inner$val
+			::append acc $outer$key$inner$val
 		}
 		string range $acc [string length $inner] end
 	}
@@ -710,7 +956,7 @@ namespace eval util {
 			set fmt [string range $fmt 0 end-1]
 			update_cursor $fmt cursor [string length $str]
 		}
-		tailcall _scan $str $fmt {*}$args
+		_scan $str $fmt {*}$args
 	}
 
                              ######################
@@ -801,8 +1047,8 @@ namespace eval util {
 		return $res
 	}
 
-	# puts ?-nonewline? ?channelId? attrlist string
-	# Example: puts_attr {{bold on} {fgcolor green}} hello
+	# puts_attr ?-nonewline? ?channelId? attrlist string
+	# Example: puts_attr {bold on fgcolor green} hello
 	proc puts_attr {args} {
 		global tcl_platform
 		variable ecma48_sgr
@@ -815,17 +1061,65 @@ namespace eval util {
 			}
 			4 {set chan [lindex $args 1]}
 			default {
-				error "wrong # args: should be \"puts_attr ?-nonewline? ?channelId? attrlist string\""
+				error "wrong # args: should be `puts_attr ?-nonewline? ?channelId? attrlist string`"
 			}
 		}
 		if {$tcl_platform(platform) eq "unix" && [chan isatty $chan]} {
-			set prefix [lreduceip [lindex $args end-1] "" {acc elem} {
-				append acc [dict get $ecma48_sgr {*}$elem]
+			set prefix [lreduceip [lindex $args end-1] "" {acc e1 e2} {
+				append acc [dict get $ecma48_sgr $e1 $e2]
 			}]
 			set suffix [dict get $ecma48_sgr reset]
-			tailcall puts {*}[lrange $args 0 end-2] $prefix[lindex $args end]$suffix
+			puts {*}[lrange $args 0 end-2] $prefix[lindex $args end]$suffix
 		} else {
-			tailcall puts {*}[lreplace $args end-1 end-1]
+			puts {*}[lreplace $args end-1 end-1]
 		}
 	}
+
+                              ####################
+                              # Misc utilities 2 #
+                              ####################
+
+	# Add/delete scripts to run when exiting. By default, scripts are run into the caller's
+	# namespace.
+	#
+	# Example:
+	#     % atexit add {puts "hello world"}
+	#     % atexit add {puts [clock format [clock seconds]]}
+	#     % atexit add {global env; puts "env: $env(HOME)"}
+	#     % atexit del {puts "hello world"}
+	#     % exit
+	#     Wed Jul 14 14:27:58 CEST 2021
+	#     env: /home/user
+	variable atexit_scripts {}
+	proc atexit {action script {ns ""}} {
+		variable atexit_scripts
+
+		if {$ns eq ""} {
+			set ns [uplevel 1 namespace current]
+		}
+		set key [list $ns $script]
+		switch $action {
+			add {
+				lappend atexit_scripts $key
+			}
+			del {
+				set idx [lsearch -exact $atexit_scripts $key]
+				if {$idx == -1} {
+					error "atexit script `$script` not found in namespace `$ns`"
+				} else {
+					set atexit_scripts [lreplace $atexit_scripts $idx $idx]
+				}
+			}
+			default {
+				error "$action: must be `add` or `del`"
+			}
+		}
+		return
+	}
+	trace add execution exit enter [lambda args {
+		variable atexit_scripts
+		foreach ns_script $atexit_scripts {
+			namespace eval {*}$ns_script
+		}
+	}]
 }
