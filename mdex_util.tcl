@@ -1,7 +1,9 @@
 package require json
 set scriptdir [file dirname [file dirname \
 							 [file normalize [file join [info script] dummy]]]]
-source [file join $scriptdir util.tcl]
+if {![namespace exists util]} {
+	source [file join $scriptdir util.tcl]
+}
 
 set URL_BASE       https://mangadex.org
 set URL_BASE_RE    https://mangadex\.org

@@ -2,7 +2,9 @@
 # TODO: check when chapter is last (how?) and put it in Atom
 set scriptdir [file dirname [file dirname \
 								 [file normalize [file join [info script] dummy]]]]
-source [file join $scriptdir util.tcl]
+if {![namespace exists util]} {
+	source [file join $scriptdir util.tcl]
+}
 source [file join $scriptdir mdex_util.tcl]
 source [file join $scriptdir atom.tcl]
 util::exec_require curl

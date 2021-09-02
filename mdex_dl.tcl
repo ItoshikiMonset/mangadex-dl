@@ -2,7 +2,9 @@
 # TODO: group filtering ?
 set scriptdir [file dirname [file dirname \
 								 [file normalize [file join [info script] dummy]]]]
-source [file join $scriptdir util.tcl]
+if {![namespace exists util]} {
+	source [file join $scriptdir util.tcl]
+}
 source [file join $scriptdir mdex_util.tcl]
 util::exec_require curl
 
@@ -31,7 +33,7 @@ if {$proxy ne ""} {
 	set ::env(https_proxy) $proxy
 }
 
-if {[regexp "^$URL_BASE_RE/title/($UUID_RE)\$" [lindex $argv 0] -> mid]} {
+if {[regexp "^$URL_BASE_RE/title/($UUID_RE)(?:/\[a-z-\]+)?\$" [lindex $argv 0] -> mid]} {
 	if {$argc > 1 && [lindex $argv 1] eq "covers"} {
 		dl_covers $mid $lang [lrange $argv 2 end]
 		exit
@@ -48,7 +50,7 @@ if {[regexp "^$URL_BASE_RE/title/($UUID_RE)\$" [lindex $argv 0] -> mid]} {
 } else {
 	set cids [lmap url $argv {
 		if {![regexp "^$URL_BASE_RE/chapter/($UUID_RE)\$" $url -> cid]} {
-			util::die "$url: not a chapter URL"
+			util::die "$url: not a chapter or manga URL"
 		}
 		set cid
 	}]

@@ -694,11 +694,11 @@ namespace eval util {
 
 	# Traditional FP foldl/reduce
 	# Examples:
-	#     % lreduce {1 2 3 4} 0  {acc elem} {+ $acc $elem}
+	#     % lreduce {1 2 3 4} 0  {acc elem}  {+ $acc $elem}
 	#     10
-	#     % lreduce {1 2 3 4} 0 {acc e1 e2} {+ $acc [* $e1 $e2]}
+	#     % lreduce {1 2 3 4} 0  {acc e1 e2} {+ $acc [* $e1 $e2]}
 	#     14
-	#     % lreduce {1 2 3 4} "" {acc elem} {string cat $acc $elem}
+	#     % lreduce {1 2 3 4} "" {acc elem}  {string cat $acc $elem}
 	#     1234
 	proc lreduce {list init argvars script} {
 		set elem_vars [lassign $argvars acc_var]
@@ -715,11 +715,11 @@ namespace eval util {
 
 	# Traditional FP foldl/reduce (inplace)
 	# Examples:
-	#     % lreduceip {1 2 3 4} 0  {acc elem} {incr acc $elem}
+	#     % lreduceip {1 2 3 4} 0  {acc elem}  {incr acc $elem}
 	#     10
-	#     % lreduce {1 2 3 4} 0 {acc e1 e2} {incr acc [* $e1 $e2]}
+	#     % lreduceip {1 2 3 4} 0  {acc e1 e2} {incr acc [* $e1 $e2]}
 	#     14
-	#     % lreduceip {1 2 3 4} "" {acc elem} {append acc $elem}
+	#     % lreduceip {1 2 3 4} "" {acc elem}  {append acc $elem}
 	#     1234
 	proc lreduceip {list init argvars script} {
 		set elem_vars [lassign $argvars acc_var]
