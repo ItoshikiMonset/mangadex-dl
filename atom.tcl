@@ -3,7 +3,9 @@
 package require tdom
 set scriptdir [file dirname [file dirname \
 							 [file normalize [file join [info script] dummy]]]]
-source [file join $scriptdir util.tcl]
+if {![namespace exists util]} {
+	source [file join $scriptdir util.tcl]
+}
 
 
 namespace eval atom {
