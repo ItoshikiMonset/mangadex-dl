@@ -1,3 +1,6 @@
+if {[namespace exists util]} {
+    return
+}
 package require Tcl 8.6
 namespace path {::tcl::mathop ::tcl::mathfunc}
 
