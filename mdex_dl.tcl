@@ -15,7 +15,10 @@ set optres [util::autocli \
 	} \
 	[file tail [info script]] \
 	{download MangaDex chapters} \
-	{{MANGA_URL [CHAPTER_NUM...]} {CHAPTER_URL...} {MANGA_URL covers [VOLUME_NUM...]}} \
+	{
+		{MANGA_URL|MANGA_ID [CHAPTER_NUM...]} {CHAPTER_URL...}
+		{MANGA_URL|MANGA_ID covers [VOLUME_NUM...]}
+	} \
 	{
 		{Download each of the specified items (chapters or covers).}
 		{If no item number list is specified, download all of them.}
@@ -31,7 +34,8 @@ if {$proxy ne ""} {
 	set ::env(https_proxy) $proxy
 }
 
-if {[regexp "^$URL_BASE_RE/title/($UUID_RE)(?:/\[^/\]+)?\$" [lindex $argv 0] -> mid]} {
+if {[regexp "^$URL_BASE_RE/title/($UUID_RE)(?:/\[^/\]+)?\$" [lindex $argv 0] -> mid] ||
+	[regexp "^$UUID_RE\$" [lindex $argv 0] -> mid]} {
 	if {$argc > 1 && [lindex $argv 1] eq "covers"} {
 		dl_covers $mid $lang [lrange $argv 2 end]
 		exit
