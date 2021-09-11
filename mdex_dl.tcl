@@ -31,7 +31,7 @@ if {$proxy ne ""} {
 	set ::env(https_proxy) $proxy
 }
 
-if {[regexp "^$URL_BASE_RE/title/($UUID_RE)(?:/\[a-z-\]+)?\$" [lindex $argv 0] -> mid]} {
+if {[regexp "^$URL_BASE_RE/title/($UUID_RE)(?:/\[^/\]+)?\$" [lindex $argv 0] -> mid]} {
 	if {$argc > 1 && [lindex $argv 1] eq "covers"} {
 		dl_covers $mid $lang [lrange $argv 2 end]
 		exit
