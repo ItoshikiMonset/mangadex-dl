@@ -46,7 +46,7 @@ if {[regexp "^$URL_BASE_RE/title/($UUID_RE)(?:/\[^/\]+)?\$" [lindex $argv 0] -> 
 	# Only keep specified chapters
 	if {$argc > 1} {
 		set chapters [util::lfilter ch $chapters {
-			[dict get $ch data attributes chapter] in [lrange $argv 1 end]
+			[dict get $ch attributes chapter] in [lrange $argv 1 end]
 		}]
 	}
 } else {

@@ -197,7 +197,7 @@ foreach entry $catalog {
 				continue
 			}
 			file mkdir $outdir
-			set atom_link $URL_BASE/chapter/[dict get $ch data id]
+			set atom_link $URL_BASE/chapter/[dict get $ch id]
 			puts stderr "\[[incr ch_count]/[llength $chapters]\] Downloading $ch_dirname..."
 			if {[catch {dl_chapter $ch $outdir} err]} {
 				puts stderr "Failed to download $outdir!\n\n$err"

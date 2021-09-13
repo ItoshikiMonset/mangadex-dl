@@ -99,7 +99,7 @@ proc get_rel_groups {relationships} {
 
 # Get chapter timestamp (using the publishAt field) in `clock seconds` format
 proc get_chapter_tstamp {chapter_data} {
-	clock scan [regsub {\+\d{2}:\d{2}$} [dict get $chapter_data data attributes publishAt] {}] \
+	clock scan [regsub {\+\d{2}:\d{2}$} [dict get $chapter_data attributes publishAt] {}] \
 		-timezone :UTC -format %Y-%m-%dT%H:%M:%S
 }
 
@@ -109,7 +109,7 @@ proc chapter_dirname {chapter_data lang {title ""}} {
 		set title [get_rel_title [dict get $chapter_data relationships] $lang]
 	}
 	set ret "$title - c"
-	set num [dict get $chapter_data data attributes chapter]
+	set num [dict get $chapter_data attributes chapter]
 	if {[string is entier -strict $num]} {
 		append ret [format %03d $num]
 	} elseif {[string is double -strict $num]} {
@@ -117,7 +117,7 @@ proc chapter_dirname {chapter_data lang {title ""}} {
 	} else {
 		append ret $num
 	}
-	set vol [dict get $chapter_data data attributes volume]
+	set vol [dict get $chapter_data attributes volume]
 	if {$vol ne "null"} {
 		if {[string is entier -strict $vol]} {
 			append ret " (v[format %02d $vol])"
@@ -183,9 +183,7 @@ proc get_chapter_list {mid lang} {
 		set manga_feed [json::json2dict [api_get manga/$mid/feed $query_params]]
 		dict incr query_params offset 500
 		# Filter invalid chapters
-		lappend chapters {*}[util::lfilter ch [dict get $manga_feed results] {
-			[dict get $ch result] eq "ok"
-		}]
+		lappend chapters {*}[dict get $manga_feed data]
 	} while {[dict get $manga_feed total] - [dict get $query_params offset] > 0}
 	return $chapters
 }
@@ -194,11 +192,11 @@ proc get_chapter_list {mid lang} {
 # Download the pages of a chapters in dirname from its JSON dict
 proc dl_chapter {chapter_data dirname} {
 	puts stderr "Downloading @Home server URL JSON..."
-	set json [api_get at-home/server/[dict get $chapter_data data id]]
+	set json [api_get at-home/server/[dict get $chapter_data id]]
 	set server [dict get [json::json2dict $json] baseUrl]
 
-	set hash [dict get $chapter_data data attributes hash]
-	set pages [dict get $chapter_data data attributes data]
+	set hash [dict get $chapter_data attributes hash]
+	set pages [dict get $chapter_data attributes data]
 
 	set urls [util::lprefix $pages $server/data/$hash/]
 	set outnames [lmap num [util::iota [llength $pages] 1] page $pages {
