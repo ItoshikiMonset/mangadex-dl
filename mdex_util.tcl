@@ -162,7 +162,7 @@ proc get_chapter {cid} {
 	if {[dict get $chapter result] eq "error"} {
 		error [dict get $chapter errors]
 	}
-	return $chapter
+	return [dict get $chapter data]
 }
 
 # Get the complete chapter list (from smallest to greatest chapter number) for a manga id
