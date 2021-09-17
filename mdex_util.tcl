@@ -137,7 +137,7 @@ proc cover_filename {cover_data lang {title ""}} {
 		set title [get_rel_title [dict get $cover_data relationships] $lang]
 	}
 	set ret "$title - c000"
-	set vol [dict get $cover_data data attributes volume]
+	set vol [dict get $cover_data attributes volume]
 	if {$vol ne "null"} {
 		if {[string is entier -strict $vol]} {
 			append ret " (v[format %02d $vol])"
@@ -147,7 +147,7 @@ proc cover_filename {cover_data lang {title ""}} {
 			append ret " (v$vol)"
 		}
 	}
-	set ext [file extension [dict get $cover_data data attributes fileName]]
+	set ext [file extension [dict get $cover_data attributes fileName]]
 	append ret " - Cover$ext"
 }
 
@@ -222,12 +222,13 @@ proc dl_covers {mid lang {volumes ""}} {
 	if {[catch {api_get cover $query_params} json]} {
 		util::die "Failed to download cover list JSON!\n\n$json"
 	}
-	set covers [dict get [json::json2dict $json] results]
-	foreach cov $covers {
-		if {[dict get $cov result] eq "ok" &&
-			($volumes eq "" || [dict get $cov data attributes volume] in $volumes)
-		} {
-			lappend urls $COVER_SERVER/covers/$mid/[dict get $cov data attributes fileName]
+	set json [json::json2dict $json]
+	if {[dict get $json result] ne "ok"} {
+		error "Wrong result returned: [dict get $json errors]"
+	}
+	foreach cov [dict get $json data] {
+		if {$volumes eq "" || [dict get $cov attributes volume] in $volumes} {
+			lappend urls $COVER_SERVER/covers/$mid/[dict get $cov attributes fileName]
 			lappend outnames [cover_filename $cov $lang]
 		}
 	}
