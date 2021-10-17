@@ -16,7 +16,8 @@ set optres [util::autocli \
 	[file tail [info script]] \
 	{download MangaDex chapters} \
 	{
-		{MANGA_URL|MANGA_ID [CHAPTER_NUM...]} {CHAPTER_URL...}
+		{MANGA_URL|MANGA_ID [CHAPTER_NUM...]}
+		{CHAPTER_URL...}
 		{MANGA_URL|MANGA_ID covers [VOLUME_NUM...]}
 	} \
 	{

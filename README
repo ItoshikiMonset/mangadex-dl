@@ -6,31 +6,31 @@
 
 Some useful tools to interface with MangaDex via its JSON API:
 
-+----------------------------------------------------------------+
-| NAME                                                           |
-|     mdex_dl.tcl - download MangaDex chapters                   |
-|                                                                |
-| SYNOPSIS                                                       |
-|     mdex_dl.tcl [OPTION]... MANGA_URL [CHAPTER_NUM...]         |
-|     mdex_dl.tcl [OPTION]... CHAPTER_URL...                     |
-|     mdex_dl.tcl [OPTION]... MANGA_URL covers [VOLUME_NUM...]   |
-|                                                                |
-| DESCRIPTION                                                    |
-|     Download each of the specified items (chapters or covers). |
-|     If no item number list is specified, download all of them. |
-|                                                                |
-| OPTIONS                                                        |
-|     -proxy PROXY_URL                                           |
-|         Set the curl HTTP/HTTPS proxy.                         |
-|                                                                |
-|     -lang LANG_CODE                                            |
-|         Only download chapters in this language.               |
-|         Defaults to "en".                                      |
-|                                                                |
-|     -help                                                      |
-|         Print this help message and exit.                      |
-|                                                                |
-+----------------------------------------------------------------+
++-----------------------------------------------------------------------+
+| NAME                                                                  |
+|     mdex_dl.tcl - download MangaDex chapters                          |
+|                                                                       |
+| SYNOPSIS                                                              |
+|     mdex_dl.tcl [OPTION]... MANGA_URL|MANGA_ID [CHAPTER_NUM...]       |
+|     mdex_dl.tcl [OPTION]... CHAPTER_URL...                            |
+|     mdex_dl.tcl [OPTION]... MANGA_URL|MANGA_ID covers [VOLUME_NUM...] |
+|                                                                       |
+| DESCRIPTION                                                           |
+|     Download each of the specified items (chapters or covers).        |
+|     If no item number list is specified, download all of them.        |
+|                                                                       |
+| OPTIONS                                                               |
+|     -proxy PROXY_URL                                                  |
+|         Set the curl HTTP/HTTPS proxy.                                |
+|                                                                       |
+|     -lang LANG_CODE                                                   |
+|         Only download chapters in this language.                      |
+|         Defaults to `en`.                                             |
+|                                                                       |
+|     -help                                                             |
+|         Print this help message and exit.                             |
+|                                                                       |
++-----------------------------------------------------------------------+
 
 +-----------------------------------------------------------------------------------+
 | NAME                                                                              |
