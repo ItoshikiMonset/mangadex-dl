@@ -44,7 +44,7 @@ Some useful tools to interface with MangaDex via its JSON API:
 |           CATALOG = ITEM ITEM...                                                  |
 |           ITEM = MANGA_ID | "{" MANGA_ID OPTION VALUE OPTION VALUE... "}"         |
 |                                                                                   |
-|     Comments are everything from a "#" to a newline or end of file.               |
+|     Everything from a "#" to the end of line is a comment.                        |
 |     Since this is actually a literal Tcl list, all the spaces used in these       |
 |     syntax rules are runs of one or more whitespace characters ([[:space:]]+ in   |
 |     POSIX EREs).                                                                  |
@@ -134,8 +134,8 @@ Idem but only the chapters 11 and 12:
     $ mdex_dl.tcl https://mangadex.org/title/ea3122bb-0c28-4669-8686-d6df1274512f 11 12
 
 or using chapter URLs:
-    $ mdex_dl.tcl https://mangadex.org/chapter/{b0bf931e-da4f-4bdc-b03e-70d4eff3c323 \
-          https://mangadex.org/chapter/39978fce-46c5-4b62-8130-00356573a619/1
+    $ mdex_dl.tcl https://mangadex.org/chapter/b0bf931e-da4f-4bdc-b03e-70d4eff3c323 \
+          https://mangadex.org/chapter/39978fce-46c5-4b62-8130-00356573a619
 
 Download the covers for volume 1, 2 and 3:
     $ mdex_dl.tcl https://mangadex.org/title/ea3122bb-0c28-4669-8686-d6df1274512f covers 1 2 3

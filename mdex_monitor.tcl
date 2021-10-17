@@ -33,7 +33,7 @@ set optres [util::autocli \
 		{    CATALOG = ITEM ITEM...}
 		{    ITEM = MANGA_ID | "{" MANGA_ID OPTION VALUE OPTION VALUE... "}"}
 		{}
-		{Comments are everything from a "#" to a newline or end of file.}
+		{Everything from a "#" to the end of line is a comment.}
 		{Since this is actually a literal Tcl list, all the spaces used in these syntax rules are
 		 runs of one or more whitespace characters ([[:space:]]+ in POSIX EREs).}
 		{}
