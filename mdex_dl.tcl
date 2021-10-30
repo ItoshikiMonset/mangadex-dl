@@ -36,7 +36,7 @@ if {$proxy ne ""} {
 }
 
 if {[regexp "^$URL_BASE_RE/title/($UUID_RE)(?:/\[^/\]+)?\$" [lindex $argv 0] -> mid] ||
-	[regexp "^$UUID_RE\$" [lindex $argv 0] -> mid]} {
+	[regexp "^($UUID_RE)\$" [lindex $argv 0] -> mid]} {
 	if {$argc > 1 && [lindex $argv 1] eq "covers"} {
 		dl_covers $mid $lang [lrange $argv 2 end]
 		exit
