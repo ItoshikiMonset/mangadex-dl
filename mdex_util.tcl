@@ -36,10 +36,26 @@ proc curl_map {urls outnames args} {
 	curl {*}$args
 }
 
+set RL_state [dict create]
+# Enforce a rate limit of reqnum requests per durations ms
+proc rate_limit {ident reqnum duration} {
+	global RL_state
+
+	set now [clock milliseconds]
+	if {[dict get? $RL_state fifo $ident] && [llength $fifo] == $reqnum} {
+		dict set RL_state $ident [lassign $fifo last]
+		if {[- $now $last] < $duration} {
+			after [- $duration [- $now $last]]
+		}
+	}
+	dict lappend RL_state $ident $now
+}
+
 # MangaDex GET API endpoint, with optional query parameters as a dict
 proc api_get {endpoint {query_params ""}} {
 	global API_URL_BASE
 
+	rate_limit global 5 1200; # Actual rate limit is 5 req/s
 	set args {}
 	foreach {key val} $query_params {
 		lappend args --data-urlencode $key=$val

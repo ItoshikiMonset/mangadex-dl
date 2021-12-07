@@ -173,7 +173,6 @@ foreach entry $catalog {
 		puts stderr [util::? {$no_local_tstamp} \
 						 "New catalog item, monitoring chapter updates from now on" \
 						 "No new chapters"]
-		after 300; # Sleep to avoid hitting the rate limit of 5 req/s
 		continue
 	}
 	# Filter chapters to keep only the new ones

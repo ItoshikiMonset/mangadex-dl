@@ -62,9 +62,6 @@ if {[regexp "^$URL_BASE_RE/title/($UUID_RE)(?:/\[^/\]+)?\$" [lindex $argv 0] -> 
 			puts stderr "Failed to download chapter $cid JSON\n\n$chapter"
 			continue
 		}
-		if {$argc > 5} {
-			after 300; # Sleep to avoid hitting the rate limit of 5 req/s
-		}
 		set chapter
 	}]
 }
