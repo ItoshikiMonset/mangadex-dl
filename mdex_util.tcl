@@ -208,11 +208,10 @@ proc get_chapter_list {mid lang} {
 # Download the pages of a chapters in dirname from its JSON dict
 proc dl_chapter {chapter_data dirname} {
 	puts stderr "Downloading @Home server URL JSON..."
-	set json [api_get at-home/server/[dict get $chapter_data id]]
-	set server [dict get [json::json2dict $json] baseUrl]
-
-	set hash [dict get $chapter_data attributes hash]
-	set pages [dict get $chapter_data attributes data]
+	set ah_data [json::json2dict [api_get at-home/server/[dict get $chapter_data id]]]
+	set server [dict get $ah_data baseUrl]
+	set hash [dict get $ah_data chapter hash]
+	set pages [dict get $ah_data chapter data]
 
 	set urls [util::lprefix $pages $server/data/$hash/]
 	set outnames [lmap num [util::iota [llength $pages] 1] page $pages {
