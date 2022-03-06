@@ -58,7 +58,13 @@ proc api_get {endpoint {query_params ""}} {
 	rate_limit global 5 1200; # Actual rate limit is 5 req/s
 	set args {}
 	foreach {key val} $query_params {
-		lappend args --data-urlencode $key=$val
+		if {[string match {*\[\]} $key]} {
+			foreach elem $val {
+				lappend args --data-urlencode $key=$elem
+			}
+		} else {
+			lappend args --data-urlencode $key=$val
+		}
 	}
 	curl --get --no-progress-meter $API_URL_BASE/$endpoint {*}$args
 }
@@ -170,8 +176,7 @@ proc cover_filename {cover_data lang {title ""}} {
 # Get a single chapter from its id
 proc get_chapter {cid} {
 	set query_params {
-		includes[] scanlation_group
-		includes[] manga
+		includes[] {scanlation_group manga}
 	}
 	puts stderr "Downloading chapter JSON..."
 	set chapter [json::json2dict [api_get chapter/$cid $query_params]]
@@ -188,8 +193,7 @@ proc get_chapter_list {mid lang} {
 		limit          500
 		offset         0
 		order[chapter] asc
-		includes[]     scanlation_group
-		includes[]     manga
+		includes[]     {scanlation_group manga}
 	}
 	if {$lang ne ""} {
 		lappend query_params {translatedLanguage[]} $lang
@@ -229,7 +233,7 @@ proc dl_covers {mid lang {volumes ""}} {
 		limit         100
 		offset        0
 		order[volume] asc
-		includes[]    manga
+		includes[]    {manga}
 	}
 	lappend query_params {manga[]} $mid
 
