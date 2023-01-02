@@ -52,8 +52,8 @@ Some useful tools to interface with MangaDex via its JSON API:
 |     The following item OPTIONs are available:                                     |
 |           autodl                                                                  |
 |               If VALUE is 1, new chapters for this manga are downloaded to the    |
-|               directory specified via the -autodl-dir option. If the -autodl      |
-|               option is set, using a value of 0 disables it.                      |
+|               directory specified via the -autodl-dir option. If the global       |
+|               -autodl option is set, using a value of 0 disables it.              |
 |                                                                                   |
 |           group                                                                   |
 |               Only download chapters having VALUE matching one of their group     |
@@ -140,7 +140,7 @@ or using chapter URLs:
 Download the covers for volume 1, 2 and 3:
     $ mdex_dl.tcl https://mangadex.org/title/ea3122bb-0c28-4669-8686-d6df1274512f covers 1 2 3
 
-Monitoring example with two mangas already monitored (including a new chapter for the first one)
+Monitoring example with two mangas already monitored (and a new online chapter for the first one)
 and another being added:
     $ ls -1F manga_dir/
     Baki Dou (2018)_ea3122bb-0c28-4669-8686-d6df1274512f.xml

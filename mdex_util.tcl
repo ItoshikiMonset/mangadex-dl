@@ -202,7 +202,6 @@ proc get_chapter_list {mid lang} {
 	util::do {
 		set manga_feed [json::json2dict [api_get manga/$mid/feed $query_params]]
 		dict incr query_params offset 500
-		# Filter invalid chapters
 		lappend chapters {*}[dict get $manga_feed data]
 	} while {[dict get $manga_feed total] - [dict get $query_params offset] > 0}
 	return $chapters
