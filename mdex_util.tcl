@@ -158,7 +158,7 @@ proc cover_filename {cover_data lang {title ""}} {
 	if {$title eq ""} {
 		set title [get_rel_title [dict get $cover_data relationships] $lang]
 	}
-	set ret "$title - c000"
+	set ret "$title"
 	set vol [dict get $cover_data attributes volume]
 	if {$vol ne "null"} {
 		if {[string is entier -strict $vol]} {
